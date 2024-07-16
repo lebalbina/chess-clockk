@@ -3,6 +3,7 @@ package com.example.chessclockk
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,15 +29,18 @@ import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Root()
+            val mainActivityVM: MainActivityVM by viewModels()
+            Root(mainActivityVM)
         }
     }
 
     @Composable
-    fun Root() {
+    fun Root(viewModel: MainActivityVM) {
         Column(
             modifier = Modifier
                 .background(Color.Magenta)
@@ -44,28 +49,37 @@ class MainActivity : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            TimerControl()
+            TimerControl(
+                viewModel,
+                { viewModel.startTimer() },
+                { viewModel.stopTimer() }
+            )
         }
     }
 
     @Composable
-    private fun TimerControl() {
-        var value by remember { mutableIntStateOf(0) }
+    private fun TimerControl(
+        viewModel: MainActivityVM,
+        onStartClick: () -> Unit,
+        onStopClick: () -> Unit
+    ) {
         var btnText by remember { mutableStateOf("START") }
+        val timerValue by viewModel.timerLiveData.observeAsState()
 
-        Text(
-            text = value.toString(),
-            modifier = Modifier.padding(24.dp)
-        )
+        timerValue?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(24.dp)
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 if (btnText == "START") {
+                    onStartClick()
                     btnText = "STOP"
-                    while (true) {
-                        value++
-                    }
                 } else {
+                    onStopClick()
                     btnText = "START"
                 }
             },
@@ -75,9 +89,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Preview
-    @Composable
-    fun PreviewClock() {
-        Root()
-    }
+//    @Preview
+//    @Composable
+//    fun PreviewClock() {
+//        Root()
+//    }
 }
