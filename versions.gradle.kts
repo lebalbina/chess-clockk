@@ -1,0 +1,1 @@
+extra["compose_version"] = "1.9.0"

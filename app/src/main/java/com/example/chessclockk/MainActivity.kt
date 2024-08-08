@@ -5,93 +5,187 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.chessclockk.ui.theme.ChessClockkTheme
+import kotlinx.coroutines.delay
 
+//TODO extract actual values from viewModel to child views
 class MainActivity : ComponentActivity() {
 
-
+    private val viewModel: MainActivityVM by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-            val mainActivityVM: MainActivityVM by viewModels()
-            Root(mainActivityVM)
+            ChessClockkTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+
+                    ) {
+                    MainView(viewModel = viewModel)
+                }
+            }
         }
     }
 
     @Composable
-    fun Root(viewModel: MainActivityVM) {
+    fun MainView(viewModel: MainActivityVM?) {
         Column(
             modifier = Modifier
-                .background(Color.Magenta)
-                .padding(Dp(24f))
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(24.dp)
         ) {
-            TimerControl(
-                viewModel,
-                { viewModel.startTimer() },
-                { viewModel.stopTimer() }
-            )
+            CombinedClocks(viewModel)
+            PlusMinusPause(viewModel)
         }
     }
 
     @Composable
-    private fun TimerControl(
-        viewModel: MainActivityVM,
-        onStartClick: () -> Unit,
-        onStopClick: () -> Unit
-    ) {
-        var btnText by remember { mutableStateOf("START") }
-        val timerValue by viewModel.timerLiveData.observeAsState()
+    fun PlusMinusPause(viewModel: MainActivityVM?) {
+        val viewConfiguration = LocalViewConfiguration.current
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        var isLongPressActive by remember { mutableStateOf(false) }
+        val isPlaying = viewModel?.isPlayingLiveData?.observeAsState()
 
-        timerValue?.let {
-            Text(
-                text = it,
-                modifier = Modifier.padding(24.dp)
-            )
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                isLongPressActive = false
+                viewModel?.startIncrement(false)
+            } else {
+                viewModel?.stopIncrement()
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = {
-                if (btnText == "START") {
-                    onStartClick()
-                    btnText = "STOP"
-                } else {
-                    onStopClick()
-                    btnText = "START"
-                }
-            },
-            modifier = Modifier.background(Color.Yellow)
+
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                isLongPressActive = false
+                delay(viewConfiguration.longPressTimeoutMillis)
+                isLongPressActive = true
+                viewModel?.startIncrement(true)
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = btnText)
+            Button(
+                onClick = { },
+                interactionSource = interactionSource,
+                modifier = Modifier.size(100.dp)
+            ) {
+                Text(text = "+")
+            }
+            Button(onClick = { viewModel?.stopIncrement() }) {
+                Text(text = "-")
+            }
+            Button(
+                onClick = { viewModel?.onPlayPauseBtnClicked(false) },
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(Color.Red)
+            ) {
+                Icon(
+                    imageVector = if (isPlaying?.value!!) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (isPlaying.value!!) "Pause" else "Play",
+                    modifier = Modifier.size(48.dp)
+                )
+            }
         }
     }
 
-//    @Preview
-//    @Composable
-//    fun PreviewClock() {
-//        Root()
-//    }
+    @Composable
+    fun CombinedClocks(viewModel: MainActivityVM?) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            ClockBlackWidget(viewModel)
+            ClockWhiteWidget(viewModel)
+        }
+    }
+
+    @Composable
+    fun ClockBlackWidget(viewModel: MainActivityVM?) {
+        val count = viewModel?.clockBlackLiveData?.observeAsState()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "PLAYER BLACK")
+            Text(text = "${count?.value}")
+            Button(onClick = { viewModel?.clockBlackPressed() }) {
+                Text(text = "START")
+            }
+        }
+    }
+
+    @Composable
+    fun ClockWhiteWidget(viewModel: MainActivityVM?) {
+        val count = viewModel?.clockWhiteLiveData?.observeAsState()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "PLAYER WHITE")
+            Text(text = "${count?.value}")
+            Button(onClick = { viewModel?.clockWhitePressed() }) {
+                Text(text = "START")
+            }
+        }
+    }
+
+    @Composable
+    @Preview(showSystemUi = true, showBackground = true)
+    fun DefaultPreview() {
+        ChessClockkTheme {
+            MainView(null)
+        }
+    }
 }
+
