@@ -42,6 +42,7 @@ class MainActivityVM : ViewModel() {
 
     init {
         updateGameState(GameState.NEW_GAME)
+        updateClocks()
     }
 
     fun clockBlackPressed() {
