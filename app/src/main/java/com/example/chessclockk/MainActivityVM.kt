@@ -1,6 +1,5 @@
 package com.example.chessclockk
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,10 +13,6 @@ import java.util.concurrent.TimeUnit
 
 class MainActivityVM : ViewModel() {
 
-    private val _isPlaying = MutableLiveData<Boolean>(false)
-    val isPlayingLiveData: LiveData<Boolean>
-        get() = _isPlaying
-
     private val _clockBlack = MutableLiveData<String>()
     val clockBlackLiveData: LiveData<String>
         get() = _clockBlack
@@ -26,44 +21,47 @@ class MainActivityVM : ViewModel() {
     val clockWhiteLiveData: LiveData<String>
         get() = _clockWhite
 
+    private val _gameState = MutableLiveData<GameState>()
+    val gameStateLiveData: LiveData<GameState>
+        get() = _gameState
+
     private var isClockWhiteRunning = false
     private var whiteMillisRemaining: Long = 0L
 
     private var isClockBlackRunning = false
     private var blackMillisRemaining: Long = 0L
 
-    private var clockValue: String = "00:00:00"
-    private var isPlaying: Boolean = false
+    private var clockIncreaseJob: Job? = null
+    private var clockDecreaseJob: Job? = null
 
-    private var job: Job? = null
-
-    private var gameState: GameState = GameState.NEW_GAME
+    private var gameState = mutableListOf<GameState>()
 
     enum class GameState {
         WHITE_MOVE, BLACK_MOVE, PAUSE, NEW_GAME
     }
 
+    init {
+        updateGameState(GameState.NEW_GAME)
+    }
+
     fun clockBlackPressed() {
-        gameState = GameState.WHITE_MOVE
-        isClockBlackRunning = false
-        isClockWhiteRunning = true
+        setPlayerWhiteClock()
         runClockWhite()
     }
 
     fun clockWhitePressed() {
-        gameState = GameState.BLACK_MOVE
-        isClockWhiteRunning = false
-        isClockBlackRunning = true
+        setPlayerBlackClock()
         runClockBlack()
     }
 
+    //TODO set limitation
     fun startIncrement(isLongPress: Boolean) {
         if (!isLongPress) {
             whiteMillisRemaining += 1000
             blackMillisRemaining += 1000
             updateClocks()
         } else {
-            job = viewModelScope.launch {
+            clockIncreaseJob = viewModelScope.launch {
                 while (true) {
                     whiteMillisRemaining += 1000
                     blackMillisRemaining += 1000
@@ -75,24 +73,70 @@ class MainActivityVM : ViewModel() {
     }
 
     fun stopIncrement() {
-        job?.cancel()
+        clockIncreaseJob?.cancel()
     }
 
-    //TODO pause pauses both clocks, but play starts only the previously ran clock!!
+    //TODO set limitation
+    fun startDecrease(isLongPress: Boolean) {
+        if (!isLongPress) {
+            whiteMillisRemaining -= 1000
+            blackMillisRemaining -= 1000
+            updateClocks()
+        } else {
+            clockDecreaseJob = viewModelScope.launch {
+                while (true) {
+                    whiteMillisRemaining -= 1000
+                    blackMillisRemaining -= 1000
+                    updateClocks()
+                    delay(100)
+                }
+            }
+        }
+    }
+
+    fun stopDecrease() {
+        clockDecreaseJob?.cancel()
+    }
+
     fun onPlayPauseBtnClicked(pause: Boolean) {
-        if (pause) {
-            isClockBlackRunning = false
-            isClockWhiteRunning = false
-        }
-        else {
+        when (gameState.last()) {
+            GameState.WHITE_MOVE, GameState.BLACK_MOVE -> {
+                pauseClocks()
+            }
 
+            GameState.PAUSE -> {
+                val currentTurn = gameState.elementAt(gameState.size - 2)
+                if (currentTurn == GameState.WHITE_MOVE || currentTurn == GameState.NEW_GAME) {
+                    setPlayerWhiteClock()
+                } else if (currentTurn == GameState.BLACK_MOVE) {
+                    setPlayerBlackClock()
+                }
+            }
+            GameState.NEW_GAME -> TODO()
         }
     }
 
-    private fun decreaseTime(isLongPress: Boolean) {
-        whiteMillisRemaining -= 1000
-        blackMillisRemaining -= 1000
-        updateClocks()
+    private fun updateGameState(state: GameState) {
+        gameState.add(state)
+        _gameState.postValue(state)
+    }
+
+    private fun setPlayerWhiteClock() {
+        updateGameState(GameState.WHITE_MOVE)
+        isClockBlackRunning = false
+        isClockWhiteRunning = true
+    }
+
+    private fun setPlayerBlackClock() {
+        updateGameState(GameState.BLACK_MOVE)
+        isClockWhiteRunning = false
+        isClockBlackRunning = true
+    }
+
+    private fun pauseClocks() {
+        isClockWhiteRunning = false
+        isClockBlackRunning = false
+        updateGameState(GameState.PAUSE)
     }
 
     private fun updateClocks() {
@@ -100,32 +144,16 @@ class MainActivityVM : ViewModel() {
         _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
     }
 
-    private fun resetClocks(clockValue: String) {
-        val regex = """(\d{2}):(\d{2}):(\d{2}).(\d{3})""".toRegex()
-        val matchResult = regex.matchEntire(clockValue)
-        if (matchResult != null) {
-            val (hours, minutes, seconds, millis) = matchResult.destructured
-            val hoursInt = hours.toInt()
-            val minutesInt = minutes.toInt()
-            val secondsInd = seconds.toInt()
-            val milliseconds = millis.toInt()
-            val clockMilliseconds =
-                (hoursInt * 3600 + minutesInt * 60 + secondsInd) * 1000L + milliseconds
-            whiteMillisRemaining = clockMilliseconds
-            blackMillisRemaining = clockMilliseconds
-        } else {
-            throw IllegalArgumentException("Invalid time format. Expectes HH:MM:SS.MMM")
-        }
-    }
-
     private fun runClockWhite() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                while (whiteMillisRemaining > 0 && isClockWhiteRunning) {
-                    whiteMillisRemaining -= 100
-                    delay(100)
-                    withContext(Dispatchers.Main) {
-                        _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
+                while (true) {
+                    if (whiteMillisRemaining > 0 && isClockWhiteRunning) {
+                        whiteMillisRemaining -= 100
+                        delay(100)
+                        withContext(Dispatchers.Main) {
+                            _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
+                        }
                     }
                 }
             }
@@ -135,23 +163,25 @@ class MainActivityVM : ViewModel() {
     private fun runClockBlack() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                while (blackMillisRemaining > 0 && isClockBlackRunning) {
-                    blackMillisRemaining -= 100
-                    delay(100)
-                    withContext(Dispatchers.Main) {
-                        _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
+                while (true) {
+                    while (blackMillisRemaining > 0 && isClockBlackRunning) {
+                        blackMillisRemaining -= 100
+                        delay(100)
+                        withContext(Dispatchers.Main) {
+                            _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun millisecondsToString(milisecond: Long): String {
-        val hours = TimeUnit.MILLISECONDS.toHours(milisecond)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(milisecond) % 60
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(milisecond) % 60
-        val millis = milisecond % 1000
+    private fun millisecondsToString(millisecond: Long): String {
+        val hours = TimeUnit.MILLISECONDS.toHours(millisecond)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(millisecond) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(millisecond) % 60
+        val millis = millisecond % 1000
         return "%02d:%02d:%02d.%03d".format(hours, minutes, seconds, millis)
     }
-
 }
+

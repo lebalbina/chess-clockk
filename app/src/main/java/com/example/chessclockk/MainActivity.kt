@@ -15,10 +15,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,14 +35,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.chessclockk.ui.theme.ChessClockkTheme
 import kotlinx.coroutines.delay
 
-//TODO extract actual values from viewModel to child views
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainActivityVM by viewModels()
@@ -54,8 +53,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
-
-                    ) {
+                ) {
                     MainView(viewModel = viewModel)
                 }
             }
@@ -75,29 +73,54 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    //TODO cos trzeba bedzie wyodrebnic
     @Composable
     fun PlusMinusPause(viewModel: MainActivityVM?) {
         val viewConfiguration = LocalViewConfiguration.current
-        val interactionSource = remember { MutableInteractionSource() }
-        val isPressed by interactionSource.collectIsPressedAsState()
-        var isLongPressActive by remember { mutableStateOf(false) }
-        val isPlaying = viewModel?.isPlayingLiveData?.observeAsState()
 
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                isLongPressActive = false
+        val interactionSourceIncrement = remember { MutableInteractionSource() }
+        val isIncrementPressed by interactionSourceIncrement.collectIsPressedAsState()
+        var isIncrementLongPressActive by remember { mutableStateOf(false) }
+
+        val interactionSourceDecrement = remember { MutableInteractionSource() }
+        val isDecreasePressed by interactionSourceDecrement.collectIsPressedAsState()
+        var isDecreaseLongPressActive by remember { mutableStateOf(false) }
+
+        val gameState = viewModel?.gameStateLiveData?.observeAsState()
+
+        LaunchedEffect(isIncrementPressed) {
+            if (isIncrementPressed) {
+                isIncrementLongPressActive = false
                 viewModel?.startIncrement(false)
             } else {
                 viewModel?.stopIncrement()
             }
         }
 
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                isLongPressActive = false
+        LaunchedEffect(isIncrementPressed) {
+            if (isIncrementPressed) {
+                isIncrementLongPressActive = false
                 delay(viewConfiguration.longPressTimeoutMillis)
-                isLongPressActive = true
+                isIncrementLongPressActive = true
                 viewModel?.startIncrement(true)
+            }
+        }
+
+        LaunchedEffect(isDecreasePressed) {
+            if (isDecreasePressed) {
+                isDecreaseLongPressActive = false
+                viewModel?.startDecrease(false)
+            } else {
+                viewModel?.stopDecrease()
+            }
+        }
+
+        LaunchedEffect(isDecreasePressed) {
+            if (isDecreasePressed) {
+                isDecreaseLongPressActive = false
+                delay(viewConfiguration.longPressTimeoutMillis)
+                isDecreaseLongPressActive = true
+                viewModel?.startDecrease(true)
             }
         }
 
@@ -109,23 +132,39 @@ class MainActivity : ComponentActivity() {
         ) {
             Button(
                 onClick = { },
-                interactionSource = interactionSource,
+                interactionSource = interactionSourceIncrement,
                 modifier = Modifier.size(100.dp)
             ) {
-                Text(text = "+")
+                Icon(imageVector = Icons.Filled.Add, contentDescription = "Plus")
             }
-            Button(onClick = { viewModel?.stopIncrement() }) {
-                Text(text = "-")
+            Button(
+                onClick = { },
+                interactionSource = interactionSourceDecrement,
+                modifier = Modifier.size(100.dp)
+            )
+            {
+                Icon(imageVector = Icons.Filled.Remove, contentDescription = "Minus")
             }
             Button(
                 onClick = { viewModel?.onPlayPauseBtnClicked(false) },
                 modifier = Modifier
                     .size(100.dp)
-                    .background(Color.Red)
             ) {
                 Icon(
-                    imageVector = if (isPlaying?.value!!) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = if (isPlaying.value!!) "Pause" else "Play",
+                    imageVector = when (gameState?.value) {
+                        MainActivityVM.GameState.WHITE_MOVE -> Icons.Filled.Pause
+                        MainActivityVM.GameState.BLACK_MOVE -> Icons.Filled.Pause
+                        MainActivityVM.GameState.PAUSE -> Icons.Filled.PlayArrow
+                        MainActivityVM.GameState.NEW_GAME -> Icons.Filled.PlayArrow
+                        null -> Icons.Filled.Pause
+                    },
+                    contentDescription = when (gameState?.value) {
+                        MainActivityVM.GameState.WHITE_MOVE -> "Pause"
+                        MainActivityVM.GameState.BLACK_MOVE -> "Pause"
+                        MainActivityVM.GameState.PAUSE -> "Play"
+                        MainActivityVM.GameState.NEW_GAME -> "Play"
+                        null -> "Pause"
+                    },
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -144,6 +183,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    //TODO parametryzacja tych widokow
     @Composable
     fun ClockBlackWidget(viewModel: MainActivityVM?) {
         val count = viewModel?.clockBlackLiveData?.observeAsState()
