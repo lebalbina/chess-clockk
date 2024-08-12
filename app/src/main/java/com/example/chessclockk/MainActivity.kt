@@ -38,9 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.chessclockk.ui.theme.ChessClockkTheme
 import kotlinx.coroutines.delay
 
@@ -73,12 +75,10 @@ class MainActivity : ComponentActivity() {
         ) {
             ClockBlackWidget(
                 viewModel,
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f)
             )
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -87,8 +87,7 @@ class MainActivity : ComponentActivity() {
             }
             ClockWhiteWidget(
                 viewModel,
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -111,8 +110,15 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text = "PLAYER BLACK")
-            Text(text = "${count?.value}")
+            Text(
+                text = "PLAYER BLACK",
+                modifier = Modifier.graphicsLayer(rotationZ = 180f)
+            )
+            Text(
+                text = "${count?.value}",
+                fontSize = 24.sp,
+                modifier = Modifier.graphicsLayer(rotationZ = 180f)
+            )
         }
     }
 
@@ -135,7 +141,10 @@ class MainActivity : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "PLAYER WHITE")
-            Text(text = "${count?.value}")
+            Text(
+                text = "${count?.value}",
+                fontSize = 24.sp
+            )
         }
     }
 
