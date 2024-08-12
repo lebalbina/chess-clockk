@@ -237,7 +237,7 @@ class MainActivity : ComponentActivity() {
 
         Button(
             enabled = isEnabled,
-            onClick = { viewModel?.onPlayPauseBtnClicked(false) },
+            onClick = { viewModel?.onPlayPauseBtnClicked() },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFBE2578)
             ),

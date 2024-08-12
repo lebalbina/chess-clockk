@@ -9,12 +9,14 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-// TODO przywrocic while(true) ALE dodac do warunkow stan gry i uruchomic zegary na inicie
+// TODO try to cancel() coroutine and restart if after play/pause button
 class MainActivityVM : ViewModel() {
 
     private val _clockBlack = MutableLiveData<String>()
@@ -29,11 +31,10 @@ class MainActivityVM : ViewModel() {
     val gameStateLiveData: LiveData<GameState>
         get() = _gameState
 
-    private var isClockWhiteRunning = false
     private var clockWhiteJob: Job? = null
+
     private var whiteMillisRemaining: Long = 360000L
 
-    private var isClockBlackRunning = false
     private var clockBlackJob: Job? = null
     private var blackMillisRemaining: Long = 360000L
 
@@ -59,14 +60,8 @@ class MainActivityVM : ViewModel() {
 
         clockWhiteJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             while (isActive) {
-                if(isClockWhiteRunning) {
-                    Log.d("chess", "White Coroutine Running")
                     withContext(Dispatchers.IO) {
-                        Log.d(
-                            "chess",
-                            "Coroutine White while loop is on thread ${Thread.currentThread()}"
-                        )
-                        while (whiteMillisRemaining > 0) {
+                        while (whiteMillisRemaining > 0 && gameState.last() == GameState.WHITE_MOVE) {
                             whiteMillisRemaining -= 100
                             delay(100)
                             withContext(Dispatchers.Main) {
@@ -74,42 +69,21 @@ class MainActivityVM : ViewModel() {
                             }
                         }
                     }
-                } else {
-                    delay(100)
-                }
             }
         }
 
         clockBlackJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             while (isActive) {
-                if(isClockBlackRunning) {
-                        withContext(Dispatchers.IO) {
-                            while (blackMillisRemaining > 0) {
-                                blackMillisRemaining -= 100
-                                delay(100)
-                                withContext(Dispatchers.Main) {
-                                    _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
-                                }
+                    withContext(Dispatchers.IO) {
+                        while (blackMillisRemaining > 0 && gameState.last() == GameState.BLACK_MOVE) {
+                            blackMillisRemaining -= 100
+                            delay(100)
+                            withContext(Dispatchers.Main) {
+                                _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
                             }
                         }
-                } else {
-                    delay(100)
-                }
+                    }
             }
-        }
-    }
-
-    private fun setClockWhiteRunning(running: Boolean) {
-        isClockWhiteRunning = running
-        if (running) {
-            clockWhiteJob?.start()
-        }
-    }
-
-    private fun setClockBlackRunning(running: Boolean) {
-        isClockBlackRunning = running
-        if (running) {
-            clockBlackJob?.start()
         }
     }
 
@@ -119,16 +93,12 @@ class MainActivityVM : ViewModel() {
         clockBlackJob?.cancel()
     }
 
-    //TODO change game state
     fun clockBlackPressed() {
         setPlayerWhiteClock()
-        setClockWhiteRunning(true)
     }
 
-    //TODO change game state
     fun clockWhitePressed() {
         setPlayerBlackClock()
-        setClockBlackRunning(true)
     }
 
     fun startIncrement(isLongPress: Boolean) {
@@ -165,7 +135,7 @@ class MainActivityVM : ViewModel() {
         clockDecreaseJob?.cancel()
     }
 
-    fun onPlayPauseBtnClicked(pause: Boolean) {
+    fun onPlayPauseBtnClicked() {
         when (gameState.last()) {
             GameState.WHITE_MOVE, GameState.BLACK_MOVE -> {
                 pauseClocks()
@@ -207,19 +177,15 @@ class MainActivityVM : ViewModel() {
 
     private fun setPlayerWhiteClock() {
         updateGameState(GameState.WHITE_MOVE)
-        isClockBlackRunning = false
-        isClockWhiteRunning = true
+        clockWhiteJob?.start()
     }
 
     private fun setPlayerBlackClock() {
         updateGameState(GameState.BLACK_MOVE)
-        isClockWhiteRunning = false
-        isClockBlackRunning = true
+        clockBlackJob?.start()
     }
 
     private fun pauseClocks() {
-        isClockWhiteRunning = false
-        isClockBlackRunning = false
         updateGameState(GameState.PAUSE)
     }
 
