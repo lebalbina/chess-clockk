@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -30,6 +31,10 @@ class MainActivityVM : ViewModel() {
     private val _gameState = MutableLiveData<GameState>()
     val gameStateLiveData: LiveData<GameState>
         get() = _gameState
+
+    //state
+    private val _gameStateMutableFlow = MutableStateFlow(GameState.NEW_GAME)
+    val gameStateFlow: StateFlow<GameState> get() = _gameStateMutableFlow
 
     private var clockWhiteJob: Job? = null
 
@@ -50,18 +55,15 @@ class MainActivityVM : ViewModel() {
         hoursInMillis + minutesInMillis + secondsInMillis
     }
 
-    enum class GameState {
-        WHITE_MOVE, BLACK_MOVE, PAUSE, NEW_GAME
-    }
-
     init {
         updateGameState(GameState.NEW_GAME)
         updateClocks()
 
         clockWhiteJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             while (isActive) {
+                if(gameStateFlow.value == GameState.WHITE_MOVE) {
                     withContext(Dispatchers.IO) {
-                        while (whiteMillisRemaining > 0 && gameState.last() == GameState.WHITE_MOVE) {
+                        while (whiteMillisRemaining > 0 && gameStateFlow.value == GameState.WHITE_MOVE) {
                             whiteMillisRemaining -= 100
                             delay(100)
                             withContext(Dispatchers.Main) {
@@ -69,13 +71,22 @@ class MainActivityVM : ViewModel() {
                             }
                         }
                     }
+
+                }
+                else {
+                    delay(100)
+                }
             }
         }
 
+        clockWhiteJob?.start()
+
         clockBlackJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             while (isActive) {
+                if(gameStateFlow.value == GameState.BLACK_MOVE) {
                     withContext(Dispatchers.IO) {
-                        while (blackMillisRemaining > 0 && gameState.last() == GameState.BLACK_MOVE) {
+                        Log.d("chess", "current Thread ${Thread.currentThread()}, job = ${this.coroutineContext.job.hashCode()}")
+                        while (blackMillisRemaining > 0 && gameStateFlow.value == GameState.BLACK_MOVE) {
                             blackMillisRemaining -= 100
                             delay(100)
                             withContext(Dispatchers.Main) {
@@ -83,8 +94,14 @@ class MainActivityVM : ViewModel() {
                             }
                         }
                     }
+                }
+                else {
+                    delay(100)
+                }
             }
         }
+
+        clockBlackJob?.start()
     }
 
     override fun onCleared() {
@@ -93,15 +110,15 @@ class MainActivityVM : ViewModel() {
         clockBlackJob?.cancel()
     }
 
-    fun clockBlackPressed() {
+    fun onClockBlackPressed() {
         setPlayerWhiteClock()
     }
 
-    fun clockWhitePressed() {
+    fun onClockWhitePressed() {
         setPlayerBlackClock()
     }
 
-    fun startIncrement(isLongPress: Boolean) {
+    fun onPlusBtnClicked(isLongPress: Boolean) {
         if (!isLongPress) {
             incrementClocks()
         } else {
@@ -114,11 +131,11 @@ class MainActivityVM : ViewModel() {
         }
     }
 
-    fun stopIncrement() {
+    fun onPlusBtnReleased() {
         clockIncreaseJob?.cancel()
     }
 
-    fun startDecrease(isLongPress: Boolean) {
+    fun onMinusBtnClicked(isLongPress: Boolean) {
         if (!isLongPress) {
             decrease()
         } else {
@@ -131,7 +148,7 @@ class MainActivityVM : ViewModel() {
         }
     }
 
-    fun stopDecrease() {
+    fun onMinusBtnReleased() {
         clockDecreaseJob?.cancel()
     }
 
@@ -172,17 +189,18 @@ class MainActivityVM : ViewModel() {
 
     private fun updateGameState(state: GameState) {
         gameState.add(state)
+        _gameStateMutableFlow.value = state
         _gameState.postValue(state)
     }
 
     private fun setPlayerWhiteClock() {
         updateGameState(GameState.WHITE_MOVE)
-        clockWhiteJob?.start()
+//        clockWhiteJob?.start()
     }
 
     private fun setPlayerBlackClock() {
         updateGameState(GameState.BLACK_MOVE)
-        clockBlackJob?.start()
+//        clockBlackJob?.start()
     }
 
     private fun pauseClocks() {
