@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -24,7 +27,7 @@ fun MainView(viewModel: MainActivityVM = viewModel()) {
 
     val clockBlackValue = viewModel.clockBlackLiveData.observeAsState("111")
     val clockWhiteValue = viewModel.clockWhiteLiveData.observeAsState("111")
-    val gameState = viewModel.gameStateFlow.collectAsState()
+    val gameState = viewModel.gameStateLiveData.observeAsState(GameState.NEW_GAME)
 
     val isWhiteEnabled by remember {
         derivedStateOf {
@@ -38,6 +41,21 @@ fun MainView(viewModel: MainActivityVM = viewModel()) {
         }
     }
 
+    val playPauseIcon by remember {
+        derivedStateOf {
+            when (gameState.value) {
+                GameState.WHITE_MOVE -> Icons.Filled.Pause
+                GameState.BLACK_MOVE -> Icons.Filled.Pause
+                GameState.PAUSE -> Icons.Filled.PlayArrow
+                GameState.NEW_GAME -> Icons.Filled.PlayArrow
+            }
+        }
+    }
+
+    val isPlayPauseBtnEnabled by remember {
+        derivedStateOf { gameState.value != GameState.NEW_GAME }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -49,7 +67,8 @@ fun MainView(viewModel: MainActivityVM = viewModel()) {
             timerValue = clockBlackValue.value,
             onClockClicked = { viewModel.onClockBlackPressed() },
             title = "PLAYER BLACK",
-            isEnabled = isBlackEnabled
+            isEnabled = isBlackEnabled,
+            rotation = 180f
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -57,15 +76,16 @@ fun MainView(viewModel: MainActivityVM = viewModel()) {
             horizontalArrangement = Arrangement.Center
         ) {
             PlusMinusPause(
-                state = gameState.value,
+                isEnabled = gameState.value == GameState.NEW_GAME,
                 onPlusBtnClicked = { isLongPress -> viewModel.onPlusBtnClicked(isLongPress) },
                 onPlsBtnReleased = { viewModel.onPlusBtnReleased() },
                 onMinusBtnClicked = { isLongPress -> viewModel.onMinusBtnClicked(isLongPress) },
                 onMinusBtnReleased = { viewModel.onMinusBtnReleased() }
             )
             PlayPauseComposable(
-                state = gameState.value,
-                onPlayPauseBtnClicked = { viewModel.onPlayPauseBtnClicked() }
+                isEnabled = isPlayPauseBtnEnabled,
+                onPlayPauseBtnClicked = { viewModel.onPlayPauseBtnClicked() },
+                icon = playPauseIcon
             )
         }
         ClockWidget(

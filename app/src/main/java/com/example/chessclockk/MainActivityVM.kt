@@ -1,23 +1,18 @@
 package com.example.chessclockk
 
-import android.util.Log
+import androidx.core.util.Predicate
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-// TODO try to cancel() coroutine and restart if after play/pause button
 class MainActivityVM : ViewModel() {
 
     private val _clockBlack = MutableLiveData<String>()
@@ -29,18 +24,10 @@ class MainActivityVM : ViewModel() {
         get() = _clockWhite
 
     private val _gameState = MutableLiveData<GameState>()
-    val gameStateLiveData: LiveData<GameState>
-        get() = _gameState
+    val gameStateLiveData: LiveData<GameState> get() = _gameState
 
-    //state
-    private val _gameStateMutableFlow = MutableStateFlow(GameState.NEW_GAME)
-    val gameStateFlow: StateFlow<GameState> get() = _gameStateMutableFlow
-
-    private var clockWhiteJob: Job? = null
-
+    private var clockJob: Job
     private var whiteMillisRemaining: Long = 360000L
-
-    private var clockBlackJob: Job? = null
     private var blackMillisRemaining: Long = 360000L
 
     private var clockIncreaseJob: Job? = null
@@ -58,56 +45,52 @@ class MainActivityVM : ViewModel() {
     init {
         updateGameState(GameState.NEW_GAME)
         updateClocks()
+        clockJob = initializeClockJob()
+    }
 
-        clockWhiteJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
+    private fun initializeClockJob(): Job {
+        return viewModelScope.launch {
             while (isActive) {
-                if(gameStateFlow.value == GameState.WHITE_MOVE) {
-                    withContext(Dispatchers.IO) {
-                        while (whiteMillisRemaining > 0 && gameStateFlow.value == GameState.WHITE_MOVE) {
-                            whiteMillisRemaining -= 100
-                            delay(100)
-                            withContext(Dispatchers.Main) {
-                                _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
-                            }
-                        }
-                    }
-
-                }
-                else {
-                    delay(100)
-                }
+                runClocks()
             }
         }
+    }
 
-        clockWhiteJob?.start()
+    private suspend fun runClocks() {
+        when (gameState.last()) {
+            GameState.WHITE_MOVE -> {
+                whiteClockTick { _clockWhite.postValue(it) }
+            }
+            GameState.BLACK_MOVE -> {
+                blackClockTick { _clockBlack.postValue(it) }
+            }
+            else -> delay(100)
+        }
+    }
 
-        clockBlackJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
-            while (isActive) {
-                if(gameStateFlow.value == GameState.BLACK_MOVE) {
-                    withContext(Dispatchers.IO) {
-                        Log.d("chess", "current Thread ${Thread.currentThread()}, job = ${this.coroutineContext.job.hashCode()}")
-                        while (blackMillisRemaining > 0 && gameStateFlow.value == GameState.BLACK_MOVE) {
-                            blackMillisRemaining -= 100
-                            delay(100)
-                            withContext(Dispatchers.Main) {
-                                _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
-                            }
-                        }
-                    }
-                }
-                else {
-                    delay(100)
-                }
+    private suspend fun whiteClockTick(updateClockValue: (String) -> Unit) {
+        withContext(Dispatchers.IO) {
+            while (whiteMillisRemaining > 0 && gameState.last() == GameState.WHITE_MOVE) {
+                whiteMillisRemaining -= 100
+                delay(100)
+                updateClockValue(millisecondsToString(whiteMillisRemaining))
             }
         }
+    }
 
-        clockBlackJob?.start()
+    private suspend fun blackClockTick(updateClockValue: (String) -> Unit) {
+        withContext(Dispatchers.IO) {
+            while (blackMillisRemaining > 0 && gameState.last() == GameState.BLACK_MOVE) {
+                blackMillisRemaining -= 100
+                delay(100)
+                updateClockValue(millisecondsToString(blackMillisRemaining))
+            }
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        clockWhiteJob?.cancel()
-        clockBlackJob?.cancel()
+        clockJob.cancel()
     }
 
     fun onClockBlackPressed() {
@@ -171,6 +154,16 @@ class MainActivityVM : ViewModel() {
         }
     }
 
+    private fun updateGameState(state: GameState) {
+        gameState.add(state)
+        _gameState.postValue(state)
+    }
+
+    private fun updateClocks() {
+        _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
+        _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
+    }
+
     private fun decrease() {
         if (whiteMillisRemaining > 0 && blackMillisRemaining > 0) {
             whiteMillisRemaining -= 1000
@@ -187,29 +180,16 @@ class MainActivityVM : ViewModel() {
         }
     }
 
-    private fun updateGameState(state: GameState) {
-        gameState.add(state)
-        _gameStateMutableFlow.value = state
-        _gameState.postValue(state)
-    }
-
     private fun setPlayerWhiteClock() {
         updateGameState(GameState.WHITE_MOVE)
-//        clockWhiteJob?.start()
     }
 
     private fun setPlayerBlackClock() {
         updateGameState(GameState.BLACK_MOVE)
-//        clockBlackJob?.start()
     }
 
     private fun pauseClocks() {
         updateGameState(GameState.PAUSE)
-    }
-
-    private fun updateClocks() {
-        _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
-        _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
     }
 
     private fun millisecondsToString(millisecond: Long): String {

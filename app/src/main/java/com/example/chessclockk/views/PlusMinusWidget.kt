@@ -21,13 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.dp
-import com.example.chessclockk.GameState
 import kotlinx.coroutines.delay
 
 //TODO how to make it less ugly?
 @Composable
 fun PlusMinusPause(
-    state: GameState,
+    isEnabled: Boolean,
     onPlusBtnClicked: (Boolean) -> Unit,
     onMinusBtnClicked: (Boolean) -> Unit,
     onPlsBtnReleased: () -> Unit,
@@ -42,8 +41,6 @@ fun PlusMinusPause(
     val interactionSourceDecrement = remember { MutableInteractionSource() }
     val isDecreasePressed by interactionSourceDecrement.collectIsPressedAsState()
     var isDecreaseLongPressActive by remember { mutableStateOf(false) }
-
-    val isEnabled = state == GameState.NEW_GAME
 
     LaunchedEffect(isIncrementPressed) {
         if (isIncrementPressed) {

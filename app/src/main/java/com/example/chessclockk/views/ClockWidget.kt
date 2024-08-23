@@ -22,9 +22,9 @@ fun ClockWidget(
     timerValue: String,
     onClockClicked: () -> Unit,
     title: String,
-    isEnabled: Boolean
+    isEnabled: Boolean,
+    rotation: Float = 0f
 ) {
-
     Column(
         modifier
             .fillMaxWidth()
@@ -37,12 +37,12 @@ fun ClockWidget(
     ) {
         Text(
             text = title,
-            modifier = Modifier.graphicsLayer(rotationZ = 180f)
+            modifier = Modifier.graphicsLayer(rotationZ = rotation)
         )
         Text(
             text = timerValue,
             fontSize = 24.sp,
-            modifier = Modifier.graphicsLayer(rotationZ = 180f)
+            modifier = Modifier.graphicsLayer(rotationZ = rotation)
         )
     }
 }

@@ -10,15 +10,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.example.chessclockk.GameState
 
 @Composable
 fun PlayPauseComposable(
-    state: GameState,
-    onPlayPauseBtnClicked: () -> Unit
+    isEnabled: Boolean,
+    onPlayPauseBtnClicked: () -> Unit,
+    icon: ImageVector
 ) {
-    val isEnabled = state != GameState.NEW_GAME
 
     Button(
         enabled = isEnabled,
@@ -29,17 +29,11 @@ fun PlayPauseComposable(
         modifier = Modifier.size(100.dp)
     ) {
         Icon(
-            imageVector = when (state) {
-                GameState.WHITE_MOVE -> Icons.Filled.Pause
-                GameState.BLACK_MOVE -> Icons.Filled.Pause
-                GameState.PAUSE -> Icons.Filled.PlayArrow
-                GameState.NEW_GAME -> Icons.Filled.PlayArrow
-            },
-            contentDescription = when (state) {
-                GameState.WHITE_MOVE -> "Pause"
-                GameState.BLACK_MOVE -> "Pause"
-                GameState.PAUSE -> "Play"
-                GameState.NEW_GAME -> "Play"
+            imageVector = icon,
+            contentDescription = when (icon) {
+                Icons.Filled.Pause -> "Pause"
+                Icons.Filled.PlayArrow -> "Play"
+                else -> "Unrecognized"
             },
             modifier = Modifier.size(48.dp)
         )
