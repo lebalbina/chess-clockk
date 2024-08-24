@@ -20,12 +20,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 //TODO how to make it less ugly?
 @Composable
-fun PlusMinusPause(
+fun PlusMinus(
     isEnabled: Boolean,
     onPlusBtnClicked: (Boolean) -> Unit,
     onMinusBtnClicked: (Boolean) -> Unit,
@@ -78,9 +79,8 @@ fun PlusMinusPause(
         }
     }
 
-    Row(modifier = Modifier.padding(12.dp)) {
+    Row() {
         Button(
-            modifier = Modifier.size(100.dp),
             onClick = { },
             interactionSource = interactionSourceIncrement,
             enabled = isEnabled,
@@ -92,7 +92,6 @@ fun PlusMinusPause(
             )
         }
         Button(
-            modifier = Modifier.size(100.dp),
             onClick = { },
             enabled = isEnabled,
             interactionSource = interactionSourceDecrement,
@@ -105,4 +104,15 @@ fun PlusMinusPause(
             )
         }
     }
+}
+
+@Composable
+@Preview
+fun PlusMinusPreview() {
+    PlusMinus(
+        isEnabled = true,
+        onPlusBtnClicked = {},
+        onMinusBtnClicked = {},
+        onPlsBtnReleased = {},
+        onMinusBtnReleased = {})
 }

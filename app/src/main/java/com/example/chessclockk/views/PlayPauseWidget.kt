@@ -11,10 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun PlayPauseComposable(
+fun PlayPause(
     isEnabled: Boolean,
     onPlayPauseBtnClicked: () -> Unit,
     icon: ImageVector
@@ -22,11 +23,10 @@ fun PlayPauseComposable(
 
     Button(
         enabled = isEnabled,
-        onClick = { onPlayPauseBtnClicked() },
+        onClick = onPlayPauseBtnClicked,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFFBE2578)
         ),
-        modifier = Modifier.size(100.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -34,8 +34,13 @@ fun PlayPauseComposable(
                 Icons.Filled.Pause -> "Pause"
                 Icons.Filled.PlayArrow -> "Play"
                 else -> "Unrecognized"
-            },
-            modifier = Modifier.size(48.dp)
+            }
         )
     }
+}
+
+@Composable
+@Preview
+fun PlayPausePreview() {
+    PlayPause(isEnabled = true, onPlayPauseBtnClicked = { }, icon = Icons.Filled.Pause)
 }

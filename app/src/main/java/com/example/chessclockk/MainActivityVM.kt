@@ -1,6 +1,5 @@
 package com.example.chessclockk
 
-import androidx.core.util.Predicate
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -35,6 +34,7 @@ class MainActivityVM : ViewModel() {
 
     private var gameState = mutableListOf<GameState>()
 
+    //TODO companion object
     private val maxGameTime by lazy {
         val hoursInMillis = TimeUnit.HOURS.toMillis(9)
         val minutesInMillis = TimeUnit.MINUTES.toMillis(59)
@@ -61,9 +61,11 @@ class MainActivityVM : ViewModel() {
             GameState.WHITE_MOVE -> {
                 whiteClockTick { _clockWhite.postValue(it) }
             }
+
             GameState.BLACK_MOVE -> {
                 blackClockTick { _clockBlack.postValue(it) }
             }
+
             else -> delay(100)
         }
     }
@@ -99,6 +101,19 @@ class MainActivityVM : ViewModel() {
 
     fun onClockWhitePressed() {
         setPlayerBlackClock()
+    }
+
+    //TODO utworzyc zmienna, ktora przechowuje ostatnio ustawiony czas
+    //TODO popup - czy aby na pewno?
+    fun onRestartClicked() {
+        updateGameState(GameState.PAUSE)
+    }
+
+    fun onRestartConfirmedClicked() {
+        updateGameState(GameState.NEW_GAME)
+        whiteMillisRemaining = 360000L
+        blackMillisRemaining = 360000L
+        updateClocks()
     }
 
     fun onPlusBtnClicked(isLongPress: Boolean) {
@@ -200,5 +215,6 @@ class MainActivityVM : ViewModel() {
         return "%01d:%02d:%02d.%03d".format(hours, minutes, seconds, millis)
     }
 }
+
 
 
