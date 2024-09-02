@@ -20,7 +20,6 @@ fun PlayPause(
     onPlayPauseBtnClicked: () -> Unit,
     icon: ImageVector
 ) {
-
     Button(
         enabled = isEnabled,
         onClick = onPlayPauseBtnClicked,

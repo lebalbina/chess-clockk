@@ -3,14 +3,16 @@ package com.example.chessclockk
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.chessclockk.ui.theme.ChessClockkTheme
-import com.example.chessclockk.views.MainView
+import com.github.terrakok.modo.Modo.rememberRootScreen
+import com.github.terrakok.modo.stack.DefaultStackScreen
+import com.github.terrakok.modo.stack.StackNavModel
 
 class MainActivity : ComponentActivity() {
 
@@ -20,21 +22,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             ChessClockkTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    MainView()
+                    val rootScreen = rememberRootScreen {
+                        DefaultStackScreen(
+                            StackNavModel(MainScreen())
+                        )
+                    }
+                    rootScreen.Content(modifier = Modifier.fillMaxSize())
                 }
             }
         }
     }
-
-    @Composable
-    @Preview(showSystemUi = true, showBackground = true)
-    fun DefaultPreview() {
-        ChessClockkTheme {
-            MainView()
-        }
-    }
 }
+
+
 

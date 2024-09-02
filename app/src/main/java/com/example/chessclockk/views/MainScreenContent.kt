@@ -10,14 +10,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,7 +29,11 @@ import com.example.chessclockk.GameState
 import com.example.chessclockk.MainActivityVM
 
 @Composable
-fun MainView(viewModel: MainActivityVM = viewModel()) {
+fun MainScreenContent(
+    viewModel: MainActivityVM = viewModel(),
+    openNextScreen: () -> Unit,
+    modifier: Modifier
+) {
 
     val clockBlackValue = viewModel.clockBlackLiveData.observeAsState("111")
     val clockWhiteValue = viewModel.clockWhiteLiveData.observeAsState("111")
@@ -95,6 +103,10 @@ fun MainView(viewModel: MainActivityVM = viewModel()) {
                 onRestartConfirmedClick = { viewModel.onRestartConfirmedClicked() },
                 icon = Icons.Filled.Refresh
             )
+            SettingsIcon(
+                onSettingsClicked = openNextScreen,
+                modifier = Modifier
+            )
         }
         ClockWidget(
             modifier = Modifier.weight(1f),
@@ -106,8 +118,37 @@ fun MainView(viewModel: MainActivityVM = viewModel()) {
     }
 }
 
+
+@Composable
+fun SettingsIcon(
+    onSettingsClicked: () -> Unit,
+    modifier: Modifier
+) {
+    Button(
+        onClick = onSettingsClicked,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFBE2578)
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Settings,
+            contentDescription = "Settings"
+        )
+    }
+}
+
+
+@Composable
+@Preview(showSystemUi = true, showBackground = true)
+fun SettingsIconPreview() {
+    SettingsIcon(onSettingsClicked = {}, modifier = Modifier)
+}
+
 @Composable
 @Preview
 fun MainViewPreview() {
-    MainView()
+    MainScreenContent(
+        modifier = Modifier,
+        openNextScreen = {}
+    )
 }
