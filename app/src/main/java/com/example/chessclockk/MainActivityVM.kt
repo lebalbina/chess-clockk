@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,7 +26,9 @@ class MainActivityVM : ViewModel() {
     private val _gameState = MutableLiveData<GameState>()
     val gameStateLiveData: LiveData<GameState> get() = _gameState
 
-    private var clockJob: Job
+    private val clockJob: Job by lazy {
+        initializeClockJob()
+    }
     private var whiteMillisRemaining: Long = 360000L
     private var blackMillisRemaining: Long = 360000L
 
@@ -45,11 +48,13 @@ class MainActivityVM : ViewModel() {
     init {
         updateGameState(GameState.NEW_GAME)
         updateClocks()
-        clockJob = initializeClockJob()
     }
 
     private fun initializeClockJob(): Job {
-        return viewModelScope.launch {
+        return viewModelScope.launch(
+            context = Dispatchers.IO,
+            start = CoroutineStart.LAZY
+        ) {
             while (isActive) {
                 runClocks()
             }
@@ -71,22 +76,18 @@ class MainActivityVM : ViewModel() {
     }
 
     private suspend fun whiteClockTick(updateClockValue: (String) -> Unit) {
-        withContext(Dispatchers.IO) {
-            while (whiteMillisRemaining > 0 && gameState.last() == GameState.WHITE_MOVE) {
-                whiteMillisRemaining -= 100
-                delay(100)
-                updateClockValue(millisecondsToString(whiteMillisRemaining))
-            }
+        while (whiteMillisRemaining > 0 && gameState.last() == GameState.WHITE_MOVE) {
+            whiteMillisRemaining -= 100
+            delay(100)
+            updateClockValue(millisecondsToString(whiteMillisRemaining))
         }
     }
 
     private suspend fun blackClockTick(updateClockValue: (String) -> Unit) {
-        withContext(Dispatchers.IO) {
-            while (blackMillisRemaining > 0 && gameState.last() == GameState.BLACK_MOVE) {
-                blackMillisRemaining -= 100
-                delay(100)
-                updateClockValue(millisecondsToString(blackMillisRemaining))
-            }
+        while (blackMillisRemaining > 0 && gameState.last() == GameState.BLACK_MOVE) {
+            blackMillisRemaining -= 100
+            delay(100)
+            updateClockValue(millisecondsToString(blackMillisRemaining))
         }
     }
 
@@ -109,6 +110,7 @@ class MainActivityVM : ViewModel() {
         updateGameState(GameState.PAUSE)
     }
 
+    //TODO trzeba utworzyc nowa liste!
     fun onRestartConfirmedClicked() {
         updateGameState(GameState.NEW_GAME)
         whiteMillisRemaining = 360000L
@@ -172,6 +174,12 @@ class MainActivityVM : ViewModel() {
     private fun updateGameState(state: GameState) {
         gameState.add(state)
         _gameState.postValue(state)
+
+        if (gameState.size == 2 && (state == GameState.WHITE_MOVE || state == GameState.BLACK_MOVE)) {
+            if (!clockJob.isActive) {
+                clockJob.start()
+            }
+        }
     }
 
     private fun updateClocks() {
