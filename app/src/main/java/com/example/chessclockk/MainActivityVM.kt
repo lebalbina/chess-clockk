@@ -23,14 +23,27 @@ class MainActivityVM : ViewModel() {
     val clockWhiteLiveData: LiveData<String>
         get() = _clockWhite
 
+    //TODO byc moze polaczyc te trzy w jeden obiekt
     private val _gameState = MutableLiveData<GameState>()
     val gameStateLiveData: LiveData<GameState> get() = _gameState
+
+    private val _blackMovesCount = MutableLiveData<String>()
+    val blackMovesCountLiveData: LiveData<String> get() = _blackMovesCount
+
+    private val _whiteMovesCount = MutableLiveData<String>()
+    val whiteMovesCountLiveData: LiveData<String> get() = _whiteMovesCount
 
     private val clockJob: Job by lazy {
         initializeClockJob()
     }
+
     private var whiteMillisRemaining: Long = 360000L
     private var blackMillisRemaining: Long = 360000L
+
+    private var whiteMovesCount = 0
+    private var blackMovesCount = 0
+
+    private var bonusTime: Long = 2000L
 
     private var clockIncreaseJob: Job? = null
     private var clockDecreaseJob: Job? = null
@@ -98,10 +111,28 @@ class MainActivityVM : ViewModel() {
 
     fun onClockBlackPressed() {
         setPlayerWhiteClock()
+        if (gameState.size > 2) {
+            blackMillisRemaining += bonusTime
+            updateBlackCounterMoves()
+        }
     }
 
     fun onClockWhitePressed() {
         setPlayerBlackClock()
+        if (gameState.size > 2) {
+            whiteMillisRemaining += bonusTime
+            updateWhiteCounterMoves()
+        }
+    }
+
+    private fun updateWhiteCounterMoves() {
+        whiteMovesCount += 1
+        _whiteMovesCount.postValue(whiteMovesCount.toString())
+    }
+
+    private fun updateBlackCounterMoves() {
+        blackMovesCount += 1
+        _blackMovesCount.postValue(blackMovesCount.toString())
     }
 
     //TODO utworzyc zmienna, ktora przechowuje ostatnio ustawiony czas

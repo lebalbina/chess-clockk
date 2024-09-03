@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -38,6 +40,8 @@ fun MainScreenContent(
     val clockBlackValue = viewModel.clockBlackLiveData.observeAsState("111")
     val clockWhiteValue = viewModel.clockWhiteLiveData.observeAsState("111")
     val gameState = viewModel.gameStateLiveData.observeAsState(GameState.NEW_GAME)
+    val blackMovesCounter = viewModel.blackMovesCountLiveData.observeAsState("0")
+    val whiteMovesCounter = viewModel.whiteMovesCountLiveData.observeAsState("0")
 
     val isWhiteEnabled by remember {
         derivedStateOf {
@@ -67,10 +71,9 @@ fun MainScreenContent(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .padding(24.dp)
     ) {
         ClockWidget(
             modifier = Modifier.weight(1f),
@@ -78,7 +81,8 @@ fun MainScreenContent(
             onClockClicked = { viewModel.onClockBlackPressed() },
             title = "PLAYER BLACK",
             isEnabled = isBlackEnabled,
-            rotation = 180f
+            rotation = 180f,
+            movesCount = blackMovesCounter.value
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -113,7 +117,8 @@ fun MainScreenContent(
             timerValue = clockWhiteValue.value,
             onClockClicked = { viewModel.onClockWhitePressed() },
             title = "PLAYER WHITE",
-            isEnabled = isWhiteEnabled
+            isEnabled = isWhiteEnabled,
+            movesCount = whiteMovesCounter.value
         )
     }
 }
@@ -135,13 +140,6 @@ fun SettingsIcon(
             contentDescription = "Settings"
         )
     }
-}
-
-
-@Composable
-@Preview(showSystemUi = true, showBackground = true)
-fun SettingsIconPreview() {
-    SettingsIcon(onSettingsClicked = {}, modifier = Modifier)
 }
 
 @Composable
