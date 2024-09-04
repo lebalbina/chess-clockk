@@ -4,33 +4,40 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chessclockk.GameState
 import com.example.chessclockk.MainActivityVM
+import kotlinx.coroutines.launch
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun MainScreenContent(
     viewModel: MainActivityVM = viewModel(),
     openNextScreen: () -> Unit,
@@ -70,6 +77,31 @@ fun MainScreenContent(
         derivedStateOf { gameState.value != GameState.NEW_GAME }
     }
 
+    val sheetState = rememberModalBottomSheetState()
+    val coroutineScope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState
+        ) {
+            CustomTimeSetBottomSheetContent(
+                sheetState = sheetState,
+                onDismissRequest = { showBottomSheet = false },
+                onSheetClose = { time, bonus ->
+                    coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            showBottomSheet = false
+                        }
+                    }
+                    viewModel.onCustomTimeSet(time, bonus)
+                },
+                modifier = Modifier
+            )
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -96,6 +128,11 @@ fun MainScreenContent(
                 onMinusBtnClicked = { isLongPress -> viewModel.onMinusBtnClicked(isLongPress) },
                 onMinusBtnReleased = { viewModel.onMinusBtnReleased() }
             )
+            ClickableIcon(
+                onIconClicked = { showBottomSheet = true },
+                icon = Icons.Filled.Alarm,
+                description = "Timer",
+            )
             PlayPause(
                 isEnabled = isPlayPauseBtnEnabled,
                 onPlayPauseBtnClicked = { viewModel.onPlayPauseBtnClicked() },
@@ -107,9 +144,10 @@ fun MainScreenContent(
                 onRestartConfirmedClick = { viewModel.onRestartConfirmedClicked() },
                 icon = Icons.Filled.Refresh
             )
-            SettingsIcon(
-                onSettingsClicked = openNextScreen,
-                modifier = Modifier
+            ClickableIcon(
+                onIconClicked = openNextScreen,
+                icon = Icons.Filled.Settings,
+                description = "Settings"
             )
         }
         ClockWidget(
@@ -125,19 +163,20 @@ fun MainScreenContent(
 
 
 @Composable
-fun SettingsIcon(
-    onSettingsClicked: () -> Unit,
-    modifier: Modifier
+fun ClickableIcon(
+    icon: ImageVector,
+    description: String,
+    onIconClicked: () -> Unit,
 ) {
     Button(
-        onClick = onSettingsClicked,
+        onClick = onIconClicked,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFFBE2578)
         )
     ) {
         Icon(
-            imageVector = Icons.Filled.Settings,
-            contentDescription = "Settings"
+            imageVector = icon,
+            contentDescription = description
         )
     }
 }

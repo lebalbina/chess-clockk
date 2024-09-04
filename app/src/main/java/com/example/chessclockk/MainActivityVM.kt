@@ -12,6 +12,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 class MainActivityVM : ViewModel() {
 
@@ -61,6 +62,9 @@ class MainActivityVM : ViewModel() {
     init {
         updateGameState(GameState.NEW_GAME)
         updateClocks()
+        println("mainactivity vm init")
+
+
     }
 
     private fun initializeClockJob(): Job {
@@ -252,6 +256,21 @@ class MainActivityVM : ViewModel() {
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millisecond) % 60
         val millis = millisecond % 1000
         return "%01d:%02d:%02d.%03d".format(hours, minutes, seconds, millis)
+    }
+
+    fun onCustomTimeSet(customTime: String, bonus: String) {
+        val splittedTime = customTime.split(":")
+        var timeInMillis: Long = 0
+        val hours = splittedTime[0].toLong()
+        val minutes = splittedTime[1].toLong()
+        val seconds = splittedTime[2].toLong()
+        timeInMillis =
+            TimeUnit.HOURS.toMillis(hours) + TimeUnit.MINUTES.toMillis(minutes) + TimeUnit.SECONDS.toMillis(
+                seconds
+            )
+        blackMillisRemaining = timeInMillis
+        whiteMillisRemaining = timeInMillis
+        updateClocks()
     }
 }
 

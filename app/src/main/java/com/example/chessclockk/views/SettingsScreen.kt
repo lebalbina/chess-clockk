@@ -20,17 +20,13 @@ class SettingsScreen(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = " This is settings screen",
-            )
-        }
+        SettingsContent()
     }
+}
+
+@Composable
+fun SettingsContent() {
+
 }
 
 @Composable
