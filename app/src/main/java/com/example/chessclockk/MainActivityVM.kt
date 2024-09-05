@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import kotlin.math.log
 
+//TODO UseCase dla poszczegolnych funkcjonalnosci
 class MainActivityVM : ViewModel() {
 
     private val _clockBlack = MutableLiveData<String>()
@@ -23,6 +24,10 @@ class MainActivityVM : ViewModel() {
     private val _clockWhite = MutableLiveData<String>()
     val clockWhiteLiveData: LiveData<String>
         get() = _clockWhite
+
+    //TODO zmienic nazwe, to jest sformattowany string
+    private val _bonusTime = MutableLiveData<String>()
+    val bonusTimeLiveData: LiveData<String> get() = _bonusTime
 
     //TODO byc moze polaczyc te trzy w jeden obiekt
     private val _gameState = MutableLiveData<GameState>()
@@ -258,21 +263,41 @@ class MainActivityVM : ViewModel() {
         return "%01d:%02d:%02d.%03d".format(hours, minutes, seconds, millis)
     }
 
-    fun onCustomTimeSet(customTime: String, bonus: String) {
-        val splittedTime = customTime.split(":")
-        var timeInMillis: Long = 0
-        val hours = splittedTime[0].toLong()
-        val minutes = splittedTime[1].toLong()
-        val seconds = splittedTime[2].toLong()
-        timeInMillis =
-            TimeUnit.HOURS.toMillis(hours) + TimeUnit.MINUTES.toMillis(minutes) + TimeUnit.SECONDS.toMillis(
-                seconds
-            )
-        blackMillisRemaining = timeInMillis
-        whiteMillisRemaining = timeInMillis
+    //TODO sharedprefs do zapisu czasu
+    fun onCustomTimeSet(customTime: String, bonus: String?) {
+        val splitTime = customTime.split(":")
+        blackMillisRemaining = extractHHMMSSformat(splitTime)
+        whiteMillisRemaining = extractHHMMSSformat(splitTime)
         updateClocks()
+
+        if (bonus != null) {
+            bonusTime = extractMMSSformat(bonus.split(":"))
+        }
+        //save to shared prefs
+        //validate string - omit zeroes!!!
+        _bonusTime.postValue("")
+
     }
+
+    private fun extractHHMMSSformat(list: List<String>): Long {
+        val hours = list[0].toLong()
+        val minutes = list[1].toLong()
+        val seconds = list[2].toLong()
+
+        return TimeUnit.HOURS.toMillis(hours) + TimeUnit.MINUTES.toMillis(minutes) +
+                TimeUnit.SECONDS.toMillis(seconds)
+    }
+
+    private fun extractMMSSformat(list: List<String>): Long {
+        val minutes = list[0].toLong()
+        val seconds = list[1].toLong()
+
+        return TimeUnit.MINUTES.toMillis(minutes) + TimeUnit.SECONDS.toMillis(seconds)
+    }
+
 }
+
+
 
 
 

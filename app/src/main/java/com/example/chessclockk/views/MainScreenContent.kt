@@ -16,7 +16,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -49,6 +48,7 @@ fun MainScreenContent(
     val gameState = viewModel.gameStateLiveData.observeAsState(GameState.NEW_GAME)
     val blackMovesCounter = viewModel.blackMovesCountLiveData.observeAsState("0")
     val whiteMovesCounter = viewModel.whiteMovesCountLiveData.observeAsState("0")
+    val timeSetting = viewModel.bonusTimeLiveData.observeAsState("3 | 2")
 
     val isWhiteEnabled by remember {
         derivedStateOf {
@@ -114,7 +114,8 @@ fun MainScreenContent(
             title = "PLAYER BLACK",
             isEnabled = isBlackEnabled,
             rotation = 180f,
-            movesCount = blackMovesCounter.value
+            movesCount = blackMovesCounter.value,
+            timeSetting = timeSetting.value
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -156,7 +157,8 @@ fun MainScreenContent(
             onClockClicked = { viewModel.onClockWhitePressed() },
             title = "PLAYER WHITE",
             isEnabled = isWhiteEnabled,
-            movesCount = whiteMovesCounter.value
+            movesCount = whiteMovesCounter.value,
+            timeSetting = timeSetting.value
         )
     }
 }

@@ -33,7 +33,8 @@ fun ClockWidget(
     title: String,
     isEnabled: Boolean,
     rotation: Float = 0f,
-    movesCount: String
+    movesCount: String,
+    timeSetting: String
 ) {
     Box(
         modifier
@@ -46,7 +47,15 @@ fun ClockWidget(
             text = "moves $movesCount",
             modifier = Modifier
                 .graphicsLayer(rotationZ = rotation)
+                .padding(top = 12.dp)
                 .align(Alignment.TopEnd)
+        )
+        Text(
+            text = timeSetting,
+            modifier = Modifier
+                .graphicsLayer(rotationZ = rotation)
+                .padding(bottom = 24.dp)
+                .align(Alignment.BottomCenter)
         )
 
         Column(
@@ -81,6 +90,7 @@ fun ClockPreview() {
         title = "PLAYAA",
         isEnabled = true,
         movesCount = "3",
-        modifier = Modifier
+        modifier = Modifier,
+        timeSetting = "3 | 2"
     )
 }
