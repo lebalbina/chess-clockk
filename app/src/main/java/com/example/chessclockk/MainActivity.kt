@@ -3,12 +3,11 @@ package com.example.chessclockk
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.chessclockk.screens.main.MainScreen
 import com.example.chessclockk.ui.theme.ChessClockkTheme
 import com.github.terrakok.modo.Modo.rememberRootScreen
 import com.github.terrakok.modo.stack.DefaultStackScreen

@@ -1,4 +1,4 @@
-package com.example.chessclockk.views
+package com.example.chessclockk.screens.views
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh

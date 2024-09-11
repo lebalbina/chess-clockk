@@ -1,13 +1,9 @@
-package com.example.chessclockk
+package com.example.chessclockk.screens.main
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.chessclockk.ui.theme.ChessClockkTheme
-import com.example.chessclockk.views.MainScreenContent
-import com.example.chessclockk.views.SettingsScreen
+import com.example.chessclockk.screens.settings.SettingsScreen
 import com.github.terrakok.modo.Screen
 import com.github.terrakok.modo.ScreenKey
 import com.github.terrakok.modo.generateScreenKey

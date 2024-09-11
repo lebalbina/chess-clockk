@@ -1,4 +1,4 @@
-package com.example.chessclockk.views
+package com.example.chessclockk.screens.views
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,11 +27,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.text.isDigitsOnly
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-//TODO center text everywhere
-//TODO textField function with input validation : 2 digits, 99:59:59
 fun CustomTimeSetBottomSheetContent(
     sheetState: SheetState,
     onDismissRequest: () -> Unit,
@@ -141,7 +140,7 @@ private fun DigitInputTextField(
 
                 DigitInputType.MINUTES, DigitInputType.SECONDS -> {
                     if (it.length <= 2) {
-                        val input = if (it.isNotEmpty()) it.toInt() else 0
+                        val input = if (it.isNotEmpty() && it.isDigitsOnly()) it.toInt() else 0
                         onInputValidated(if (input > 59) "59" else it)
                     }
                 }
@@ -184,7 +183,4 @@ fun MediumPhonePreview() {
         modifier = Modifier
     )
 }
-
-
-
 

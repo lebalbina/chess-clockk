@@ -1,4 +1,4 @@
-package com.example.chessclockk.views
+package com.example.chessclockk.screens.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,8 +31,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.chessclockk.GameState
-import com.example.chessclockk.MainActivityVM
+import com.example.chessclockk.vm.GameState
+import com.example.chessclockk.vm.MainActivityVM
+import com.example.chessclockk.screens.views.ClockWidget
+import com.example.chessclockk.screens.views.CustomTimeSetBottomSheetContent
+import com.example.chessclockk.screens.views.PlayPause
+import com.example.chessclockk.screens.views.PlusMinus
+import com.example.chessclockk.screens.views.Restart
 import kotlinx.coroutines.launch
 
 @Composable
@@ -48,7 +53,7 @@ fun MainScreenContent(
     val gameState = viewModel.gameStateLiveData.observeAsState(GameState.NEW_GAME)
     val blackMovesCounter = viewModel.blackMovesCountLiveData.observeAsState("0")
     val whiteMovesCounter = viewModel.whiteMovesCountLiveData.observeAsState("0")
-    val timeSetting = viewModel.bonusTimeLiveData.observeAsState("3 | 2")
+    val timeSetting = viewModel.timeFormatLiveData.observeAsState("3 | 2")
 
     val isWhiteEnabled by remember {
         derivedStateOf {
