@@ -1,81 +1,75 @@
 package com.example.chessclockk.vm
 
+import android.os.SystemClock
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chessclockk.extractHHMMSSformatToMillis
+import com.example.chessclockk.extractMMSSformatToMillis
+import com.example.chessclockk.millisToFormattedString
+import com.example.chessclockk.vm.IMainActivityVM.*
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 //TODO UseCase dla poszczegolnych funkcjonalnosci
 class MainActivityVM : ViewModel(), IMainActivityVM {
 
     private val _clockBlack = MutableLiveData<String>()
-    val clockBlackLiveData: LiveData<String>
+    override val clockBlackLiveData: LiveData<String>
         get() = _clockBlack
 
     private val _clockWhite = MutableLiveData<String>()
-    val clockWhiteLiveData: LiveData<String>
+    override val clockWhiteLiveData: LiveData<String>
         get() = _clockWhite
 
-    private val state: MainScreenState
     private val _state = MutableLiveData<MainScreenState>()
-    val stateLiveData: LiveData<MainScreenState> get() = _state
+    override val stateLiveData: LiveData<MainScreenState>
+        get() = _state
 
     private val clockJob: Job by lazy {
         initializeClockJob()
     }
 
+    private val state: MainScreenState = MainScreenState(
+        timeFormat = "timeFormat",
+        gameState = GameState.NEW_GAME,
+        whiteMovesCount = 0,
+        blackMovesCount = 0
+    )
+
     //TODO z sharedPrefs wyciagnac
     private var whiteMillisRemaining: Long = 360000L
     private var blackMillisRemaining: Long = 360000L
+    private var bonusTime: Long = 0L
 
     private var clockIncreaseJob: Job? = null
     private var clockDecreaseJob: Job? = null
 
     private var gameState = mutableListOf<GameState>()
-    private var bonusTime: Long = 0L
-
-    val MAX_HOURS_MILLIS = TimeUnit.HOURS.toMillis(9)
-    val MAX_MINUTES_MILLIS = TimeUnit.MINUTES.toMillis(59)
-    val MAX_SECONDS_MILLIS = TimeUnit.SECONDS.toMillis(59)
-
-    private val maxGameTime by lazy {
-        val hoursInMillis = TimeUnit.HOURS.toMillis(9)
-        val minutesInMillis = TimeUnit.MINUTES.toMillis(59)
-        val secondsInMillis = TimeUnit.SECONDS.toMillis(59)
-        hoursInMillis + minutesInMillis + secondsInMillis
-    }
 
     init {
         updateGameState(GameState.NEW_GAME)
         updateClocks()
-        state = MainScreenState(
-            timeFormat = "timeFormat",
-            gameState = gameState.last(),
-            whiteMovesCount = 0,
-            blackMovesCount = 0
-        )
     }
 
     override fun onClockBlackPressed() {
-        setPlayerWhiteClock()
+        updateGameState(GameState.WHITE_MOVE)
         if (gameState.size > 2) {
             blackMillisRemaining += bonusTime
-            updateBlackCounterMoves(state.blackMovesCount + 1)
+            _state.postValue(state.copy(blackMovesCount = state.blackMovesCount + 1))
         }
     }
 
     override fun onClockWhitePressed() {
-        setPlayerBlackClock()
+        updateGameState(GameState.BLACK_MOVE)
         if (gameState.size > 2) {
             whiteMillisRemaining += bonusTime
-            updateWhiteCounterMoves(state.whiteMovesCount + 1)
+            _state.postValue(state.copy(whiteMovesCount = state.whiteMovesCount + 1))
         }
     }
 
@@ -95,15 +89,15 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
     override fun onPlayPauseBtnClicked() {
         when (gameState.last()) {
             GameState.WHITE_MOVE, GameState.BLACK_MOVE -> {
-                pauseClocks()
+                updateGameState(GameState.PAUSE)
             }
 
             GameState.PAUSE -> {
                 val currentTurn = gameState.elementAt(gameState.size - 2)
                 if (currentTurn == GameState.WHITE_MOVE || currentTurn == GameState.NEW_GAME) {
-                    setPlayerWhiteClock()
+                    updateGameState(GameState.WHITE_MOVE)
                 } else if (currentTurn == GameState.BLACK_MOVE) {
-                    setPlayerBlackClock()
+                    updateGameState(GameState.BLACK_MOVE)
                 }
             }
 
@@ -115,16 +109,11 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
 
     //TODO sharedprefs do zapisu czasu
     override fun onCustomTimeSet(customTime: String, bonus: String) {
-        val splitTime = customTime.split(":")
-        val splitBonus = bonus.split(":")
-
-        blackMillisRemaining = extractHHMMSSformat(splitTime)
-        whiteMillisRemaining = extractHHMMSSformat(splitTime)
+        blackMillisRemaining = customTime.extractHHMMSSformatToMillis()
+        whiteMillisRemaining = customTime.extractHHMMSSformatToMillis()
         updateClocks()
 
-        val timeLong = extractMMSSformat(splitBonus[0].toLong(), splitBonus[1].toLong())
-        val timeFormat = millisecondsToString(timeLong)
-        updateTimeFormat(timeFormat)
+        bonusTime = bonus.extractMMSSformatToMillis()
     }
 
     override fun onCleared() {
@@ -132,12 +121,20 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
         clockJob.cancel()
     }
 
-    private fun updateWhiteCounterMoves(count: Int) {
-        _state.postValue(state.copy(whiteMovesCount = count))
+    private fun updateGameState(gameState: GameState) {
+        this.gameState.add(gameState)
+        _state.postValue(state.copy(gameState = gameState))
+
+        if (this.gameState.size == 2 && (gameState == GameState.WHITE_MOVE || gameState == GameState.BLACK_MOVE)) {
+            if (!clockJob.isActive) {
+                clockJob.start()
+            }
+        }
     }
 
-    private fun updateBlackCounterMoves(count: Int) {
-        _state.postValue(state.copy(blackMovesCount = count))
+    private fun updateClocks() {
+        _clockBlack.postValue(blackMillisRemaining.millisToFormattedString())
+        _clockWhite.postValue(whiteMillisRemaining.millisToFormattedString())
     }
 
     private fun initializeClockJob(): Job {
@@ -154,142 +151,49 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
     private suspend fun runClocks() {
         when (gameState.last()) {
             GameState.WHITE_MOVE -> {
-                whiteClockTick { _clockWhite.postValue(it) }
+                clockTick(
+                    updateClockValue = { _clockWhite.postValue(it) },
+                    updatePlayerMillis = { whiteMillisRemaining = it },
+                    gameStateToCheck = GameState.WHITE_MOVE,
+                    playerMillis = whiteMillisRemaining
+                )
             }
 
             GameState.BLACK_MOVE -> {
-                blackClockTick { _clockBlack.postValue(it) }
+                clockTick(
+                    updateClockValue = { _clockBlack.postValue(it) },
+                    updatePlayerMillis = { blackMillisRemaining = it },
+                    gameStateToCheck = GameState.BLACK_MOVE,
+                    playerMillis = blackMillisRemaining
+                )
             }
 
             else -> delay(100)
         }
     }
 
-    private suspend fun whiteClockTick(updateClockValue: (String) -> Unit) {
-        while (whiteMillisRemaining > 0 && gameState.last() == GameState.WHITE_MOVE) {
-            whiteMillisRemaining -= 100
+    private suspend fun clockTick(
+        updatePlayerMillis: (Long) -> Unit,
+        updateClockValue: (String) -> Unit,
+        playerMillis: Long,
+        gameStateToCheck: GameState
+    ) {
+        val startTime = SystemClock.elapsedRealtime()
+        var lastUpdateTime = startTime
+        var remainingPlayerMillis = playerMillis
+
+        while (remainingPlayerMillis > 0 && gameState.last() == gameStateToCheck) {
+            val currentTime = SystemClock.elapsedRealtime()
+            val elapsedTime = currentTime - lastUpdateTime
+            remainingPlayerMillis -= elapsedTime
+            updatePlayerMillis(remainingPlayerMillis)
+            updateClockValue(remainingPlayerMillis.millisToFormattedString())
+            lastUpdateTime = currentTime
             delay(100)
-            updateClockValue(millisecondsToString(whiteMillisRemaining))
-        }
-    }
-
-    private suspend fun blackClockTick(updateClockValue: (String) -> Unit) {
-        while (blackMillisRemaining > 0 && gameState.last() == GameState.BLACK_MOVE) {
-            blackMillisRemaining -= 100
-            delay(100)
-            updateClockValue(millisecondsToString(blackMillisRemaining))
-        }
-    }
-
-    private fun updateGameState(gameState: GameState) {
-        this.gameState.add(gameState)
-        _state.postValue(state.copy(gameState = gameState))
-
-        if (this.gameState.size == 2 && (gameState == GameState.WHITE_MOVE || gameState == GameState.BLACK_MOVE)) {
-            if (!clockJob.isActive) {
-                clockJob.start()
-            }
-        }
-    }
-
-    private fun updateClocks() {
-        _clockBlack.postValue(millisecondsToString(blackMillisRemaining))
-        _clockWhite.postValue(millisecondsToString(whiteMillisRemaining))
-    }
-
-    private fun setPlayerWhiteClock() {
-        updateGameState(GameState.WHITE_MOVE)
-    }
-
-    private fun setPlayerBlackClock() {
-        updateGameState(GameState.BLACK_MOVE)
-    }
-
-    private fun pauseClocks() {
-        updateGameState(GameState.PAUSE)
-    }
-
-    //TODO jak nie ma godzin, to ich nie wyswietlac
-    private fun millisecondsToString(millisecond: Long): String {
-        val hours = TimeUnit.MILLISECONDS.toHours(millisecond)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(millisecond) % 60
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(millisecond) % 60
-        val millis = millisecond % 1000
-
-        var format = ""
-        if (hours == 0L) {
-            format = "%02d:%02d"
-        }
-        return "%01d:%02d:%02d.%03d".format(hours, minutes, seconds, millis)
-    }
-
-    private fun updateTimeFormat(timeFormat: String) {
-        _state.postValue(state.copy(timeFormat = timeFormat))
-    }
-
-    private fun extractHHMMSSformat(list: List<String>): Long {
-        val hours = list[0].toLong()
-        val minutes = list[1].toLong()
-        val seconds = list[2].toLong()
-
-        return TimeUnit.HOURS.toMillis(hours) + TimeUnit.MINUTES.toMillis(minutes) +
-                TimeUnit.SECONDS.toMillis(seconds)
-    }
-
-    private fun extractMMSSformat(minutes: Long, seconds: Long): Long {
-        return TimeUnit.MINUTES.toMillis(minutes) + TimeUnit.SECONDS.toMillis(seconds)
-    }
-
-    fun onPlusBtnClicked(isLongPress: Boolean) {
-        if (!isLongPress) {
-            incrementClocks()
-        } else {
-            clockIncreaseJob = viewModelScope.launch {
-                while (true) {
-                    incrementClocks()
-                    delay(100)
-                }
-            }
-        }
-    }
-
-    fun onPlusBtnReleased() {
-        clockIncreaseJob?.cancel()
-    }
-
-    fun onMinusBtnClicked(isLongPress: Boolean) {
-        if (!isLongPress) {
-            decrease()
-        } else {
-            clockDecreaseJob = viewModelScope.launch {
-                while (true) {
-                    decrease()
-                    delay(100)
-                }
-            }
-        }
-    }
-
-    fun onMinusBtnReleased() {
-        clockDecreaseJob?.cancel()
-    }
-
-    private fun decrease() {
-        if (whiteMillisRemaining > 0 && blackMillisRemaining > 0) {
-            whiteMillisRemaining -= 1000
-            blackMillisRemaining -= 1000
-            updateClocks()
-        }
-    }
-
-    private fun incrementClocks() {
-        if (whiteMillisRemaining < maxGameTime && blackMillisRemaining < maxGameTime) {
-            whiteMillisRemaining += 1000
-            blackMillisRemaining += 1000
-            updateClocks()
         }
     }
 }
+
 
 
 

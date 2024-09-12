@@ -31,13 +31,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.chessclockk.vm.GameState
-import com.example.chessclockk.vm.MainActivityVM
 import com.example.chessclockk.screens.views.ClockWidget
 import com.example.chessclockk.screens.views.CustomTimeSetBottomSheetContent
 import com.example.chessclockk.screens.views.PlayPause
-import com.example.chessclockk.screens.views.PlusMinus
 import com.example.chessclockk.screens.views.Restart
+import com.example.chessclockk.vm.GameState
+import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
+import com.example.chessclockk.vm.MainActivityVM
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,26 +50,31 @@ fun MainScreenContent(
 
     val clockBlackValue = viewModel.clockBlackLiveData.observeAsState("111")
     val clockWhiteValue = viewModel.clockWhiteLiveData.observeAsState("111")
-    val gameState = viewModel.gameStateLiveData.observeAsState(GameState.NEW_GAME)
-    val blackMovesCounter = viewModel.blackMovesCountLiveData.observeAsState("0")
-    val whiteMovesCounter = viewModel.whiteMovesCountLiveData.observeAsState("0")
-    val timeSetting = viewModel.timeFormatLiveData.observeAsState("3 | 2")
+
+    val state = viewModel.stateLiveData.observeAsState(
+        MainScreenState(
+            timeFormat = "",
+            whiteMovesCount = 0,
+            blackMovesCount = 0,
+            gameState = GameState.NEW_GAME
+        )
+    )
 
     val isWhiteEnabled by remember {
         derivedStateOf {
-            gameState.value == GameState.WHITE_MOVE || gameState.value == GameState.NEW_GAME
+            state.value.gameState == GameState.WHITE_MOVE || state.value.gameState == GameState.NEW_GAME
         }
     }
 
     val isBlackEnabled by remember {
         derivedStateOf {
-            gameState.value == GameState.BLACK_MOVE || gameState.value == GameState.NEW_GAME
+            state.value.gameState == GameState.BLACK_MOVE || state.value.gameState == GameState.NEW_GAME
         }
     }
 
     val playPauseIcon by remember {
         derivedStateOf {
-            when (gameState.value) {
+            when (state.value.gameState) {
                 GameState.WHITE_MOVE -> Icons.Filled.Pause
                 GameState.BLACK_MOVE -> Icons.Filled.Pause
                 GameState.PAUSE -> Icons.Filled.PlayArrow
@@ -79,7 +84,7 @@ fun MainScreenContent(
     }
 
     val isPlayPauseBtnEnabled by remember {
-        derivedStateOf { gameState.value != GameState.NEW_GAME }
+        derivedStateOf { state.value.gameState != GameState.NEW_GAME }
     }
 
     val sheetState = rememberModalBottomSheetState()
@@ -119,30 +124,23 @@ fun MainScreenContent(
             title = "PLAYER BLACK",
             isEnabled = isBlackEnabled,
             rotation = 180f,
-            movesCount = blackMovesCounter.value,
-            timeSetting = timeSetting.value
+            movesCount = state.value.blackMovesCount.toString(),
+            timeSetting = state.value.timeFormat
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            PlusMinus(
-                isEnabled = gameState.value == GameState.NEW_GAME,
-                onPlusBtnClicked = { isLongPress -> viewModel.onPlusBtnClicked(isLongPress) },
-                onPlsBtnReleased = { viewModel.onPlusBtnReleased() },
-                onMinusBtnClicked = { isLongPress -> viewModel.onMinusBtnClicked(isLongPress) },
-                onMinusBtnReleased = { viewModel.onMinusBtnReleased() }
+            PlayPause(
+                isEnabled = isPlayPauseBtnEnabled,
+                onPlayPauseBtnClicked = { viewModel.onPlayPauseBtnClicked() },
+                icon = playPauseIcon
             )
             ClickableIcon(
                 onIconClicked = { showBottomSheet = true },
                 icon = Icons.Filled.Alarm,
                 description = "Timer",
-            )
-            PlayPause(
-                isEnabled = isPlayPauseBtnEnabled,
-                onPlayPauseBtnClicked = { viewModel.onPlayPauseBtnClicked() },
-                icon = playPauseIcon
             )
             Restart(
                 isEnabled = isPlayPauseBtnEnabled,
@@ -162,8 +160,8 @@ fun MainScreenContent(
             onClockClicked = { viewModel.onClockWhitePressed() },
             title = "PLAYER WHITE",
             isEnabled = isWhiteEnabled,
-            movesCount = whiteMovesCounter.value,
-            timeSetting = timeSetting.value
+            movesCount = state.value.whiteMovesCount.toString(),
+            timeSetting = state.value.timeFormat
         )
     }
 }
