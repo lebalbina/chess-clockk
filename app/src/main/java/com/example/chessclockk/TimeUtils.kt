@@ -2,26 +2,21 @@ package com.example.chessclockk
 
 import java.util.concurrent.TimeUnit
 
-//TODO zrobic metody na powtarzajacy sie kod - split
-fun String.extractHHMMSSformatToMillis(): Long {
-    val splitList = this.split(":")
-    val hours = splitList[0].toLong()
-    val minutes = splitList[1].toLong()
-    val seconds = splitList[2].toLong()
+fun String.convertHHMMSSToMillis(): Long {
+    val splitList = this.split(":").map { it.toLong() }
+    return when (splitList.size) {
+        3 -> TimeUnit.HOURS.toMillis(splitList[0]) +
+                TimeUnit.MINUTES.toMillis(splitList[1]) +
+                TimeUnit.SECONDS.toMillis(splitList[2])
 
-    return TimeUnit.HOURS.toMillis(hours) + TimeUnit.MINUTES.toMillis(minutes) +
-            TimeUnit.SECONDS.toMillis(seconds)
+        2 -> TimeUnit.MINUTES.toMillis(splitList[0]) +
+                TimeUnit.SECONDS.toMillis(splitList[1])
+
+        else -> throw IllegalArgumentException("Invalid time format; HH:MM(:SS) accepted")
+    }
 }
 
-fun String.extractMMSSformatToMillis(): Long {
-    val splitList = this.split(":")
-    val minutes = splitList[0].toLong()
-    val seconds = splitList[1].toLong()
-
-    return TimeUnit.MINUTES.toMillis(minutes) + TimeUnit.SECONDS.toMillis(seconds)
-}
-
-fun Long.millisToFormattedString(): String {
+fun Long.millisToHHMMSS(): String {
     val hours = TimeUnit.MILLISECONDS.toHours(this)
     val minutes = TimeUnit.MILLISECONDS.toMinutes(this) % 60
     val seconds = TimeUnit.MILLISECONDS.toSeconds(this) % 60
@@ -29,35 +24,26 @@ fun Long.millisToFormattedString(): String {
     return if (hours == 0L) {
         "%02d:%02d".format(minutes, seconds)
     } else {
-        "%01d:%02d:%02d".format(hours, minutes, seconds)
+        "%d:%02d:%02d".format(hours, minutes, seconds)
     }
 }
 
-fun Pair<String, String>.extractHHMMSSMMSStoTempo(): String {
-    val stringBuilder = StringBuilder()
+fun Pair<String, String>.convertGameAndBonusTimeToTempo(): String {
+    val (gameTime, bonusTime) = this
 
-    val splitGameTime = this.first.split(":")
-    val hours = splitGameTime[0].toLong()
-    val minutes = splitGameTime[1].toLong()
-    val seconds = splitGameTime[2].toLong()
+    val splitGameTime = gameTime.split(":").map { it.toLong() }
+    val gameMinutes =
+        if (splitGameTime[0] != 0L) "${splitGameTime[0] * 60 + splitGameTime[1]}\'" else "${splitGameTime[1]}\'"
+    val gameSeconds = if (splitGameTime[2] != 0L) " ${splitGameTime[2]}\"" else ""
 
-    val gameTempo = if (hours != 0L) hours * 60 + minutes else minutes
-    stringBuilder.append("$gameTempo\'")
-    if (seconds != 0L) {
-        stringBuilder.append("$seconds\"")
-    }
+    val gameTempo = gameMinutes + gameSeconds
 
-    val splitBonus = this.second.split(":")
-    val bonusMinutes = splitBonus[0].toLong()
-    val bonusSeconds = splitBonus[1].toLong()
-
-    if (bonusSeconds != 0L) {
-        stringBuilder.append(" + ")
-        val bonusTempo = if (bonusMinutes != 0L) bonusMinutes * 60 + bonusSeconds else bonusSeconds
-        stringBuilder.append("$bonusTempo\"")
-
-    }
-    return stringBuilder.toString()
+    val splitBonus = bonusTime.split(":").map { it.toLong() }
+    val bonusSeconds =
+        if (splitBonus[0] != 0L) splitBonus[0] * 60 + splitBonus[1] else splitBonus[1]
+    val bonusTempo = if (bonusSeconds != 0L) " + $bonusSeconds\"" else ""
+    return gameTempo + bonusTempo
 }
+
 
 

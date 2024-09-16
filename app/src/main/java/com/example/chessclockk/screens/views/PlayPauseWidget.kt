@@ -12,21 +12,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun PlayPause(
-    isEnabled: Boolean,
-    onPlayPauseBtnClicked: () -> Unit,
-    icon: ImageVector
-) {
+fun PlayPause(playPauseState: PlayPauseState) {
     Button(
-        enabled = isEnabled,
-        onClick = onPlayPauseBtnClicked,
+        enabled = playPauseState.isEnabled,
+        onClick = playPauseState.onPlayPauseBtnClicked,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFFBE2578)
         ),
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = when (icon) {
+            imageVector = playPauseState.icon,
+            contentDescription = when (playPauseState.icon) {
                 Icons.Filled.Pause -> "Pause"
                 Icons.Filled.PlayArrow -> "Play"
                 else -> "Unrecognized"
@@ -35,8 +31,20 @@ fun PlayPause(
     }
 }
 
+data class PlayPauseState(
+    val isEnabled: Boolean,
+    val onPlayPauseBtnClicked: () -> Unit,
+    val icon: ImageVector
+)
+
 @Composable
 @Preview
 fun PlayPausePreview() {
-    PlayPause(isEnabled = true, onPlayPauseBtnClicked = { }, icon = Icons.Filled.Pause)
+    PlayPause(
+        PlayPauseState(
+            isEnabled = true,
+            onPlayPauseBtnClicked = { },
+            icon = Icons.Filled.Pause
+        )
+    )
 }

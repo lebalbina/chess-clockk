@@ -5,19 +5,25 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chessclockk.extractHHMMSSformatToMillis
-import com.example.chessclockk.extractMMSSformatToMillis
-import com.example.chessclockk.millisToFormattedString
-import com.example.chessclockk.vm.IMainActivityVM.*
+import com.example.chessclockk.TempoUseCase
+import com.example.chessclockk.convertGameAndBonusTimeToTempo
+import com.example.chessclockk.convertHHMMSSToMillis
+import com.example.chessclockk.millisToHHMMSS
+import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-//TODO UseCase dla poszczegolnych funkcjonalnosci
-class MainActivityVM : ViewModel(), IMainActivityVM {
+@HiltViewModel
+class MainActivityVM @Inject constructor(
+    private val tempoUseCase: TempoUseCase
+) : ViewModel(), IMainActivityVM {
 
     private val _clockBlack = MutableLiveData<String>()
     override val clockBlackLiveData: LiveData<String>
@@ -35,32 +41,32 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
         initializeClockJob()
     }
 
-    private val state: MainScreenState = MainScreenState(
-        timeFormat = "timeFormat",
+    //TODO companion object
+    private var whiteMillisRemaining = TimeUnit.MINUTES.toMillis(3)
+    private var blackMillisRemaining = TimeUnit.MINUTES.toMillis(3)
+    private var bonusTime = TimeUnit.SECONDS.toMillis(2)
+    private var defaultFormat = "3\" 2'"
+
+    private val state = MainScreenState(
+        timeFormat = defaultFormat,
         gameState = GameState.NEW_GAME,
         whiteMovesCount = 0,
         blackMovesCount = 0
     )
-
-    //TODO z sharedPrefs wyciagnac
-    private var whiteMillisRemaining: Long = 360000L
-    private var blackMillisRemaining: Long = 360000L
-    private var bonusTime: Long = 0L
-
-    private var clockIncreaseJob: Job? = null
-    private var clockDecreaseJob: Job? = null
 
     private var gameState = mutableListOf<GameState>()
 
     init {
         updateGameState(GameState.NEW_GAME)
         updateClocks()
+        updateTimeFormat()
     }
 
     override fun onClockBlackPressed() {
         updateGameState(GameState.WHITE_MOVE)
         if (gameState.size > 2) {
             blackMillisRemaining += bonusTime
+            _clockBlack.postValue(blackMillisRemaining.millisToHHMMSS())
             _state.postValue(state.copy(blackMovesCount = state.blackMovesCount + 1))
         }
     }
@@ -69,11 +75,11 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
         updateGameState(GameState.BLACK_MOVE)
         if (gameState.size > 2) {
             whiteMillisRemaining += bonusTime
+            _clockWhite.postValue(whiteMillisRemaining.millisToHHMMSS())
             _state.postValue(state.copy(whiteMovesCount = state.whiteMovesCount + 1))
         }
     }
 
-    //TODO utworzyc zmienna, ktora przechowuje ostatnio ustawiony czas
     override fun onRestartClicked() {
         updateGameState(GameState.PAUSE)
     }
@@ -107,13 +113,15 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
         }
     }
 
-    //TODO sharedprefs do zapisu czasu
     override fun onCustomTimeSet(customTime: String, bonus: String) {
-        blackMillisRemaining = customTime.extractHHMMSSformatToMillis()
-        whiteMillisRemaining = customTime.extractHHMMSSformatToMillis()
+        tempoUseCase.saveTempo(customTime, bonus)
+        updateTimeFormat()
+
+        blackMillisRemaining = customTime.convertHHMMSSToMillis()
+        whiteMillisRemaining = customTime.convertHHMMSSToMillis()
         updateClocks()
 
-        bonusTime = bonus.extractMMSSformatToMillis()
+        bonusTime = bonus.convertHHMMSSToMillis()
     }
 
     override fun onCleared() {
@@ -133,8 +141,13 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
     }
 
     private fun updateClocks() {
-        _clockBlack.postValue(blackMillisRemaining.millisToFormattedString())
-        _clockWhite.postValue(whiteMillisRemaining.millisToFormattedString())
+        _clockBlack.postValue(blackMillisRemaining.millisToHHMMSS())
+        _clockWhite.postValue(whiteMillisRemaining.millisToHHMMSS())
+    }
+
+    private fun updateTimeFormat() {
+        val tempoAndBonus = tempoUseCase.retrieveTempo()
+        _state.postValue(state.copy(timeFormat = tempoAndBonus.convertGameAndBonusTimeToTempo()))
     }
 
     private fun initializeClockJob(): Job {
@@ -187,7 +200,7 @@ class MainActivityVM : ViewModel(), IMainActivityVM {
             val elapsedTime = currentTime - lastUpdateTime
             remainingPlayerMillis -= elapsedTime
             updatePlayerMillis(remainingPlayerMillis)
-            updateClockValue(remainingPlayerMillis.millisToFormattedString())
+            updateClockValue(remainingPlayerMillis.millisToHHMMSS())
             lastUpdateTime = currentTime
             delay(100)
         }

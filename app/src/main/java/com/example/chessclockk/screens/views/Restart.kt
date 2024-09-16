@@ -15,32 +15,37 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun Restart(
-    isEnabled: Boolean,
-    onRestartClicked: () -> Unit,
-    onRestartConfirmedClick: () -> Unit,
-    icon: ImageVector
-) {
+fun Restart(restartState: RestartState) {
 
     val showDialog = remember { mutableStateOf(false) }
 
     Button(
         onClick = {
-            onRestartClicked()
+            restartState.onRestartClicked()
             showDialog.value = true
         },
-        enabled = isEnabled
+        enabled = restartState.isEnabled
     ) {
         Icon(
-            imageVector = icon,
+            imageVector = restartState.icon,
             contentDescription = "restart"
         )
     }
 
     if (showDialog.value) {
-        RestartDialog(onRestartConfirmedClick = onRestartConfirmedClick, showDialog = showDialog)
+        RestartDialog(
+            onRestartConfirmedClick = restartState.onRestartConfirmedClick,
+            showDialog = showDialog
+        )
     }
 }
+
+data class RestartState(
+    val isEnabled: Boolean,
+    val onRestartClicked: () -> Unit,
+    val onRestartConfirmedClick: () -> Unit,
+    val icon: ImageVector
+)
 
 @Composable
 fun RestartDialog(
@@ -71,10 +76,12 @@ fun RestartDialog(
 @Preview
 fun RestartPreview() {
     Restart(
-        onRestartConfirmedClick = { },
-        icon = Icons.Filled.Refresh,
-        onRestartClicked = {},
-        isEnabled = true
+        RestartState(
+            onRestartConfirmedClick = { },
+            icon = Icons.Filled.Refresh,
+            onRestartClicked = {},
+            isEnabled = true
+        )
     )
 }
 

@@ -23,32 +23,26 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ClockWidget(
     modifier: Modifier,
-    timerValue: String,
-    onClockClicked: () -> Unit,
-    title: String,
-    isEnabled: Boolean,
-    rotation: Float = 0f,
-    movesCount: String,
-    timeSetting: String
+    clockState: ClockState
 ) {
     Box(
         modifier
             .fillMaxSize()
             .background(Color(0xFF25BE78))
-            .alpha(if (isEnabled) 1f else 0.5f)
-            .clickable { onClockClicked.invoke() }
+            .alpha(if (clockState.isEnabled) 1f else 0.5f)
+            .clickable { clockState.onClockClicked.invoke() }
     ) {
         Text(
-            text = "moves $movesCount",
+            text = "moves: ${clockState.movesCount}",
             modifier = Modifier
-                .graphicsLayer(rotationZ = rotation)
+                .graphicsLayer(rotationZ = clockState.rotation)
                 .padding(top = 12.dp)
                 .align(Alignment.TopEnd)
         )
         Text(
-            text = timeSetting,
+            text = clockState.timeSetting,
             modifier = Modifier
-                .graphicsLayer(rotationZ = rotation)
+                .graphicsLayer(rotationZ = clockState.rotation)
                 .padding(bottom = 24.dp)
                 .align(Alignment.BottomCenter)
         )
@@ -62,30 +56,42 @@ fun ClockWidget(
         ) {
             Spacer(modifier = Modifier.size(48.dp))
             Text(
-                text = title,
+                text = clockState.title,
                 modifier = Modifier
-                    .graphicsLayer(rotationZ = rotation)
+                    .graphicsLayer(rotationZ = clockState.rotation)
             )
             Text(
-                text = timerValue,
+                text = clockState.timerValue,
                 fontSize = 24.sp,
                 modifier = Modifier
-                    .graphicsLayer(rotationZ = rotation)
+                    .graphicsLayer(rotationZ = clockState.rotation)
             )
         }
     }
 }
 
+data class ClockState(
+    val timerValue: String,
+    val onClockClicked: () -> Unit,
+    val title: String,
+    val isEnabled: Boolean,
+    val rotation: Float = 0f,
+    val movesCount: String,
+    val timeSetting: String
+)
+
 @Composable
 @Preview
 fun ClockPreview() {
     ClockWidget(
-        timerValue = "00:00:00",
-        onClockClicked = { },
-        title = "PLAYAA",
-        isEnabled = true,
-        movesCount = "3",
         modifier = Modifier,
-        timeSetting = "3 | 2"
+        clockState = ClockState(
+            timerValue = "00:00:00",
+            onClockClicked = { },
+            title = "PLAYAA",
+            isEnabled = true,
+            movesCount = "3",
+            timeSetting = "3 | 2"
+        )
     )
 }

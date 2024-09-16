@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.chessclockk.screens.main.MainScreen
 import com.example.chessclockk.ui.theme.ChessClockkTheme
 import com.github.terrakok.modo.Modo.rememberRootScreen
 import com.github.terrakok.modo.stack.DefaultStackScreen
 import com.github.terrakok.modo.stack.StackNavModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,12 +27,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    val rootScreen = rememberRootScreen {
-                        DefaultStackScreen(
-                            StackNavModel(MainScreen())
-                        )
-                    }
-                    rootScreen.Content(modifier = Modifier.fillMaxSize())
+                    MainScreen(
+                        viewModel = hiltViewModel(),
+                        modifier = Modifier
+                    )
                 }
             }
         }
