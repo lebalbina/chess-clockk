@@ -1,4 +1,4 @@
-package com.example.chessclockk.screens.views
+package com.example.chessclockk.views.clock
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,11 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.chessclockk.R
 
 @Composable
 fun ClockWidget(
@@ -31,54 +34,31 @@ fun ClockWidget(
             .background(Color(0xFF25BE78))
             .alpha(if (clockState.isEnabled) 1f else 0.5f)
             .clickable { clockState.onClockClicked.invoke() }
+            .rotate(clockState.rotation)
     ) {
         Text(
-            text = "moves: ${clockState.movesCount}",
             modifier = Modifier
-                .graphicsLayer(rotationZ = clockState.rotation)
-                .padding(top = 12.dp)
-                .align(Alignment.TopEnd)
+                .padding(top = 12.dp, end = 12.dp)
+                .align(Alignment.TopEnd),
+            text = "${stringResource(id = R.string.clock_moves)} ${clockState.movesCount}",
+            fontSize = 18.sp
         )
         Text(
-            text = clockState.timeSetting,
             modifier = Modifier
-                .graphicsLayer(rotationZ = clockState.rotation)
                 .padding(bottom = 24.dp)
-                .align(Alignment.BottomCenter)
+                .align(Alignment.BottomCenter),
+            text = clockState.timeSetting,
+            fontSize = 18.sp
         )
-
-        Column(
-            modifier = Modifier
-                .padding(top = 24.dp)
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Spacer(modifier = Modifier.size(48.dp))
-            Text(
-                text = clockState.title,
-                modifier = Modifier
-                    .graphicsLayer(rotationZ = clockState.rotation)
-            )
+        Column(modifier = Modifier.align(Alignment.Center)) {
             Text(
                 text = clockState.timerValue,
-                fontSize = 24.sp,
-                modifier = Modifier
-                    .graphicsLayer(rotationZ = clockState.rotation)
+                fontSize = 64.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }
 }
-
-data class ClockState(
-    val timerValue: String,
-    val onClockClicked: () -> Unit,
-    val title: String,
-    val isEnabled: Boolean,
-    val rotation: Float = 0f,
-    val movesCount: String,
-    val timeSetting: String
-)
 
 @Composable
 @Preview
@@ -88,10 +68,11 @@ fun ClockPreview() {
         clockState = ClockState(
             timerValue = "00:00:00",
             onClockClicked = { },
-            title = "PLAYAA",
+            playerLabel = "PLAYAA",
             isEnabled = true,
             movesCount = "3",
-            timeSetting = "3 | 2"
+            timeSetting = "3 + 2",
+            rotation = 0f
         )
     )
 }

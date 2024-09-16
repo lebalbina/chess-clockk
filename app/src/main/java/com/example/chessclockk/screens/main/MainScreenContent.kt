@@ -26,13 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.chessclockk.screens.views.ClockState
-import com.example.chessclockk.screens.views.ClockWidget
-import com.example.chessclockk.screens.views.CustomTimeSetBottomSheetContent
-import com.example.chessclockk.screens.views.PlayPause
-import com.example.chessclockk.screens.views.PlayPauseState
-import com.example.chessclockk.screens.views.Restart
-import com.example.chessclockk.screens.views.RestartState
+import com.example.chessclockk.views.clock.ClockState
+import com.example.chessclockk.views.clock.ClockWidget
+import com.example.chessclockk.views.customtimebottomsheet.CustomTimeSetBottomSheetContent
+import com.example.chessclockk.views.playpause.PlayPause
+import com.example.chessclockk.views.playpause.PlayPauseState
+import com.example.chessclockk.views.restart.Restart
+import com.example.chessclockk.views.restart.RestartState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -57,8 +57,7 @@ fun MainScreenContent(
             sheetState = sheetState
         ) {
             CustomTimeSetBottomSheetContent(
-                sheetState = sheetState,
-                onDismissRequest = { showBottomSheet = false },
+                modifier = Modifier,
                 onSheetClose = { time, bonus ->
                     coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
@@ -66,8 +65,7 @@ fun MainScreenContent(
                         }
                     }
                     onCustomTimeSet(time, bonus)
-                },
-                modifier = Modifier
+                }
             )
         }
     }
@@ -133,16 +131,16 @@ fun MainScreenPreview() {
         clockWhiteState = ClockState(
             timerValue = "3:02",
             timeSetting = "3\"2'",
-            title = "Player black",
+            playerLabel = "Player black",
             movesCount = "3",
-            rotation = 180f,
+            rotation = 0f,
             isEnabled = true,
             onClockClicked = {}
         ),
         clockBlackState = ClockState(
             timerValue = "3:02",
             timeSetting = "3\"2'",
-            title = "Player black",
+            playerLabel = "Player black",
             movesCount = "3",
             rotation = 180f,
             isEnabled = true,

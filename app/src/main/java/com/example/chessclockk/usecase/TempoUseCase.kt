@@ -1,4 +1,4 @@
-package com.example.chessclockk
+package com.example.chessclockk.usecase
 
 import android.content.SharedPreferences
 import javax.inject.Inject

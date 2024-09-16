@@ -2,7 +2,7 @@ package com.example.chessclockk.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.example.chessclockk.TempoUseCase
+import com.example.chessclockk.usecase.TempoUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

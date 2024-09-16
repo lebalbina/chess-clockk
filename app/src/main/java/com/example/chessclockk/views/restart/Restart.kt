@@ -1,4 +1,4 @@
-package com.example.chessclockk.screens.views
+package com.example.chessclockk.views.restart
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -11,13 +11,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 
+//TODO przeniesc Dialog do MainScreenContent
 @Composable
-fun Restart(restartState: RestartState) {
-
+fun Restart(
+    modifier: Modifier = Modifier,
+    restartState: RestartState
+) {
     val showDialog = remember { mutableStateOf(false) }
+    if (showDialog.value) {
+        RestartDialog(
+            onRestartConfirmedClick = restartState.onRestartConfirmedClick,
+            showDialog = showDialog
+        )
+    }
 
     Button(
         onClick = {
@@ -31,24 +41,10 @@ fun Restart(restartState: RestartState) {
             contentDescription = "restart"
         )
     }
-
-    if (showDialog.value) {
-        RestartDialog(
-            onRestartConfirmedClick = restartState.onRestartConfirmedClick,
-            showDialog = showDialog
-        )
-    }
 }
 
-data class RestartState(
-    val isEnabled: Boolean,
-    val onRestartClicked: () -> Unit,
-    val onRestartConfirmedClick: () -> Unit,
-    val icon: ImageVector
-)
-
 @Composable
-fun RestartDialog(
+private fun RestartDialog(
     onRestartConfirmedClick: () -> Unit,
     showDialog: MutableState<Boolean>
 ) {
@@ -76,6 +72,7 @@ fun RestartDialog(
 @Preview
 fun RestartPreview() {
     Restart(
+        modifier = Modifier,
         RestartState(
             onRestartConfirmedClick = { },
             icon = Icons.Filled.Refresh,
@@ -94,3 +91,4 @@ fun DialogPreview() {
         showDialog = showDialog
     )
 }
+

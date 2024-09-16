@@ -1,4 +1,4 @@
-package com.example.chessclockk.screens.views
+package com.example.chessclockk.views.customtimebottomsheet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,12 +9,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,21 +19,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
+import com.example.chessclockk.R
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun CustomTimeSetBottomSheetContent(
-    sheetState: SheetState,
-    onDismissRequest: () -> Unit,
     onSheetClose: (String, String) -> Unit,
     modifier: Modifier
 ) {
+    var hours by remember { mutableStateOf("00") }
+    var minutes by remember { mutableStateOf("00") }
+    var seconds by remember { mutableStateOf("00") }
+
+    var bonusMinutes by remember { mutableStateOf("00") }
+    var bonusSeconds by remember { mutableStateOf("00") }
+
     Surface {
         Column(
             modifier = modifier
@@ -44,13 +49,13 @@ fun CustomTimeSetBottomSheetContent(
                 .wrapContentHeight(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            var hours by remember { mutableStateOf("00") }
-            var minutes by remember { mutableStateOf("00") }
-            var seconds by remember { mutableStateOf("00") }
-
-            var bonusMinutes by remember { mutableStateOf("00") }
-            var bonusSeconds by remember { mutableStateOf("00") }
-
+            Text(
+                modifier = Modifier
+                    .padding(top = 24.dp, bottom = 24.dp),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                text = stringResource(id = R.string.custom_time_modal_title).uppercase(),
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -83,7 +88,7 @@ fun CustomTimeSetBottomSheetContent(
             ) {
                 Text(
                     modifier = Modifier.padding(end = 8.dp),
-                    text = "BONUS"
+                    text = stringResource(id = R.string.bonus)
                 )
                 DigitInputTextField(
                     value = bonusMinutes,
@@ -97,13 +102,15 @@ fun CustomTimeSetBottomSheetContent(
                     inputType = DigitInputType.SECONDS
                 )
             }
-            Button(onClick = {
-                onSheetClose(
-                    "$hours:$minutes:$seconds",
-                    "$bonusMinutes:$bonusSeconds"
-                )
-            }) {
-                Text(text = "Close meee")
+            Button(
+                modifier = Modifier.padding(bottom = 48.dp),
+                onClick = {
+                    onSheetClose(
+                        "$hours:$minutes:$seconds",
+                        "$bonusMinutes:$bonusSeconds"
+                    )
+                }) {
+                Text(text = stringResource(id = R.string.close_time_modal_btn))
             }
         }
     }
@@ -117,18 +124,14 @@ private fun Colon() {
     )
 }
 
-enum class DigitInputType {
-    HOURS, MINUTES, SECONDS
-}
-
 @Composable
 private fun DigitInputTextField(
     value: String,
     onInputValidated: (String) -> Unit,
     inputType: DigitInputType
 ) {
-    val textFieldSize = 64.dp
     TextField(
+        modifier = Modifier.width(64.dp),
         value = value,
         onValueChange = {
             when (inputType) {
@@ -146,41 +149,16 @@ private fun DigitInputTextField(
                 }
             }
         },
-        Modifier.width(textFieldSize),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = TextStyle(textAlign = TextAlign.Center)
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(
-    name = "Small phone",
-    widthDp = 360,
-    heightDp = 640
-)
-@Composable
-fun LargePhonePreview() {
-    CustomTimeSetBottomSheetContent(
-        sheetState = rememberModalBottomSheetState(),
-        onSheetClose = { _, _ -> },
-        onDismissRequest = {},
-        modifier = Modifier
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(
-    name = "Medium Phone",
-    widthDp = 427,
-    heightDp = 948
-)
+@Preview
 @Composable
 fun MediumPhonePreview() {
     CustomTimeSetBottomSheetContent(
-        sheetState = rememberModalBottomSheetState(),
         onSheetClose = { _, _ -> },
-        onDismissRequest = {},
         modifier = Modifier
     )
 }
-

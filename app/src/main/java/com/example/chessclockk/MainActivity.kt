@@ -10,9 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.chessclockk.screens.main.MainScreen
 import com.example.chessclockk.ui.theme.ChessClockkTheme
-import com.github.terrakok.modo.Modo.rememberRootScreen
-import com.github.terrakok.modo.stack.DefaultStackScreen
-import com.github.terrakok.modo.stack.StackNavModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

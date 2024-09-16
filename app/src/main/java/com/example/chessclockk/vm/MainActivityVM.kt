@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chessclockk.TempoUseCase
+import com.example.chessclockk.usecase.TempoUseCase
 import com.example.chessclockk.convertGameAndBonusTimeToTempo
 import com.example.chessclockk.convertHHMMSSToMillis
 import com.example.chessclockk.millisToHHMMSS
@@ -55,6 +55,8 @@ class MainActivityVM @Inject constructor(
     )
 
     private var gameState = mutableListOf<GameState>()
+    private var blackMovesCount = 0
+    private var whiteMovesCount = 0
 
     init {
         updateGameState(GameState.NEW_GAME)
@@ -66,8 +68,9 @@ class MainActivityVM @Inject constructor(
         updateGameState(GameState.WHITE_MOVE)
         if (gameState.size > 2) {
             blackMillisRemaining += bonusTime
+            blackMovesCount += 1
             _clockBlack.postValue(blackMillisRemaining.millisToHHMMSS())
-            _state.postValue(state.copy(blackMovesCount = state.blackMovesCount + 1))
+            _state.postValue(state.copy(blackMovesCount = blackMovesCount))
         }
     }
 
@@ -75,8 +78,9 @@ class MainActivityVM @Inject constructor(
         updateGameState(GameState.BLACK_MOVE)
         if (gameState.size > 2) {
             whiteMillisRemaining += bonusTime
+            whiteMovesCount += 1
             _clockWhite.postValue(whiteMillisRemaining.millisToHHMMSS())
-            _state.postValue(state.copy(whiteMovesCount = state.whiteMovesCount + 1))
+            _state.postValue(state.copy(whiteMovesCount = whiteMovesCount))
         }
     }
 

@@ -10,9 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.example.chessclockk.screens.views.ClockState
-import com.example.chessclockk.screens.views.PlayPauseState
-import com.example.chessclockk.screens.views.RestartState
+import com.example.chessclockk.views.clock.ClockState
+import com.example.chessclockk.views.playpause.PlayPauseState
+import com.example.chessclockk.views.restart.RestartState
 import com.example.chessclockk.vm.GameState
 import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
 import com.example.chessclockk.vm.MainActivityVM
@@ -68,19 +68,20 @@ fun MainScreen(
         clockWhiteState = ClockState(
             timerValue = clockBlackValue.value,
             onClockClicked = { viewModel.onClockBlackPressed() },
-            title = "PLAYER BLACK",
+            playerLabel = "PLAYER BLACK",
             isEnabled = isBlackEnabled,
-            rotation = 180f,
+            rotation = 0f,
             movesCount = state.value.blackMovesCount.toString(),
             timeSetting = state.value.timeFormat
         ),
         clockBlackState = ClockState(
             timerValue = clockWhiteValue.value,
             onClockClicked = { viewModel.onClockWhitePressed() },
-            title = "PLAYER WHITE",
+            playerLabel = "PLAYER WHITE",
             isEnabled = isWhiteEnabled,
             movesCount = state.value.whiteMovesCount.toString(),
-            timeSetting = state.value.timeFormat
+            timeSetting = state.value.timeFormat,
+            rotation = 180f
         ),
         playPauseState = PlayPauseState(
             isEnabled = isPlayPauseBtnEnabled,

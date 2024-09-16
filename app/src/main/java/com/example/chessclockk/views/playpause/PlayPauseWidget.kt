@@ -1,4 +1,4 @@
-package com.example.chessclockk.screens.views
+package com.example.chessclockk.views.playpause
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -7,12 +7,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun PlayPause(playPauseState: PlayPauseState) {
+fun PlayPause(
+    modifier: Modifier = Modifier,
+    playPauseState: PlayPauseState
+) {
     Button(
         enabled = playPauseState.isEnabled,
         onClick = playPauseState.onPlayPauseBtnClicked,
@@ -31,16 +35,11 @@ fun PlayPause(playPauseState: PlayPauseState) {
     }
 }
 
-data class PlayPauseState(
-    val isEnabled: Boolean,
-    val onPlayPauseBtnClicked: () -> Unit,
-    val icon: ImageVector
-)
-
 @Composable
 @Preview
 fun PlayPausePreview() {
     PlayPause(
+        modifier = Modifier,
         PlayPauseState(
             isEnabled = true,
             onPlayPauseBtnClicked = { },
