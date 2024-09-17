@@ -33,7 +33,11 @@ fun ClockWidget(
             .fillMaxSize()
             .background(Color(0xFF25BE78))
             .alpha(if (clockState.isEnabled) 1f else 0.5f)
-            .clickable { clockState.onClockClicked.invoke() }
+            .then(
+                if (clockState.isEnabled) {
+                    Modifier.clickable { clockState.onClockClicked.invoke() }
+                } else Modifier
+            )
             .rotate(clockState.rotation)
     ) {
         Text(

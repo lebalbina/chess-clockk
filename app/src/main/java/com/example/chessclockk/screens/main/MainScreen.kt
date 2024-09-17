@@ -29,7 +29,7 @@ fun MainScreen(
 
     val state = viewModel.stateLiveData.observeAsState(
         MainScreenState(
-            timeFormat = "",
+            timeFormat = "3 + 2",
             whiteMovesCount = 0,
             blackMovesCount = 0,
             gameState = GameState.NEW_GAME
@@ -95,6 +95,7 @@ fun MainScreen(
             icon = Icons.Filled.Refresh
         ),
         onSettingsClicked = {},
-        onCustomTimeSet = { time, bonus -> viewModel.onCustomTimeSet(time, bonus) }
+        onCustomTimeSet = { time, bonus -> viewModel.onCustomTimeSet(time, bonus) },
+        onCustomTimeSetClick = { viewModel.onRestartClicked() }
     )
 }

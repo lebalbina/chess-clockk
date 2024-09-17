@@ -5,10 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chessclockk.usecase.TempoUseCase
 import com.example.chessclockk.convertGameAndBonusTimeToTempo
 import com.example.chessclockk.convertHHMMSSToMillis
 import com.example.chessclockk.millisToHHMMSS
+import com.example.chessclockk.usecase.TempoUseCase
 import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineStart
@@ -47,7 +47,7 @@ class MainActivityVM @Inject constructor(
     private var bonusTime = TimeUnit.SECONDS.toMillis(2)
     private var defaultFormat = "3\" 2'"
 
-    private val state = MainScreenState(
+    private var state = MainScreenState(
         timeFormat = defaultFormat,
         gameState = GameState.NEW_GAME,
         whiteMovesCount = 0,
@@ -60,27 +60,21 @@ class MainActivityVM @Inject constructor(
 
     init {
         updateGameState(GameState.NEW_GAME)
-        updateClocks()
         updateTimeFormat()
+        initializeGame()
     }
 
     override fun onClockBlackPressed() {
         updateGameState(GameState.WHITE_MOVE)
         if (gameState.size > 2) {
-            blackMillisRemaining += bonusTime
-            blackMovesCount += 1
-            _clockBlack.postValue(blackMillisRemaining.millisToHHMMSS())
-            _state.postValue(state.copy(blackMovesCount = blackMovesCount))
+            incrementMovesCounterAndAddBonusBlack()
         }
     }
 
     override fun onClockWhitePressed() {
         updateGameState(GameState.BLACK_MOVE)
         if (gameState.size > 2) {
-            whiteMillisRemaining += bonusTime
-            whiteMovesCount += 1
-            _clockWhite.postValue(whiteMillisRemaining.millisToHHMMSS())
-            _state.postValue(state.copy(whiteMovesCount = whiteMovesCount))
+            incrementMovesCounterAndAddBonusWhite()
         }
     }
 
@@ -89,11 +83,7 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onRestartConfirmedClicked() {
-        gameState.clear()
-        updateGameState(GameState.NEW_GAME)
-        whiteMillisRemaining = 360000L
-        blackMillisRemaining = 360000L
-        updateClocks()
+        initializeGame()
     }
 
     override fun onPlayPauseBtnClicked() {
@@ -117,15 +107,14 @@ class MainActivityVM @Inject constructor(
         }
     }
 
+    override fun onCustomTimeSetClick(){
+        updateGameState(GameState.PAUSE)
+    }
+
     override fun onCustomTimeSet(customTime: String, bonus: String) {
         tempoUseCase.saveTempo(customTime, bonus)
         updateTimeFormat()
-
-        blackMillisRemaining = customTime.convertHHMMSSToMillis()
-        whiteMillisRemaining = customTime.convertHHMMSSToMillis()
-        updateClocks()
-
-        bonusTime = bonus.convertHHMMSSToMillis()
+        initializeGame()
     }
 
     override fun onCleared() {
@@ -135,8 +124,8 @@ class MainActivityVM @Inject constructor(
 
     private fun updateGameState(gameState: GameState) {
         this.gameState.add(gameState)
-        _state.postValue(state.copy(gameState = gameState))
-
+        state = state.copy(gameState = gameState)
+        _state.postValue(state)
         if (this.gameState.size == 2 && (gameState == GameState.WHITE_MOVE || gameState == GameState.BLACK_MOVE)) {
             if (!clockJob.isActive) {
                 clockJob.start()
@@ -151,7 +140,36 @@ class MainActivityVM @Inject constructor(
 
     private fun updateTimeFormat() {
         val tempoAndBonus = tempoUseCase.retrieveTempo()
-        _state.postValue(state.copy(timeFormat = tempoAndBonus.convertGameAndBonusTimeToTempo()))
+        state = state.copy(timeFormat = tempoAndBonus.convertGameAndBonusTimeToTempo())
+        _state.postValue(state)
+    }
+
+    private fun incrementMovesCounterAndAddBonusBlack() {
+        blackMillisRemaining += bonusTime
+        blackMovesCount += 1
+        _clockBlack.postValue(blackMillisRemaining.millisToHHMMSS())
+        state = state.copy(blackMovesCount = blackMovesCount)
+        _state.postValue(state)
+    }
+
+    private fun incrementMovesCounterAndAddBonusWhite() {
+        whiteMillisRemaining += bonusTime
+        whiteMovesCount += 1
+        _clockWhite.postValue(whiteMillisRemaining.millisToHHMMSS())
+        state = state.copy(whiteMovesCount = whiteMovesCount)
+        _state.postValue(state)
+    }
+
+    private fun initializeGame() {
+        gameState.clear()
+        updateGameState(GameState.NEW_GAME)
+        val gameTempoAndBonus = tempoUseCase.retrieveTempo()
+        whiteMillisRemaining = gameTempoAndBonus.first.convertHHMMSSToMillis()
+        blackMillisRemaining = gameTempoAndBonus.first.convertHHMMSSToMillis()
+        updateClocks()
+
+        bonusTime = gameTempoAndBonus.second.convertHHMMSSToMillis()
+
     }
 
     private fun initializeClockJob(): Job {

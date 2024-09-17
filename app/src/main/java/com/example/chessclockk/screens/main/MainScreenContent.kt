@@ -44,6 +44,7 @@ fun MainScreenContent(
     playPauseState: PlayPauseState,
     restartState: RestartState,
     onCustomTimeSet: (String, String) -> Unit,
+    onCustomTimeSetClick: () -> Unit,
     onSettingsClicked: () -> Unit
 ) {
 
@@ -86,7 +87,9 @@ fun MainScreenContent(
         ) {
             PlayPause(playPauseState = playPauseState)
             ClickableIcon(
-                onIconClicked = { showBottomSheet = true },
+                onIconClicked = {
+                    onCustomTimeSetClick()
+                    showBottomSheet = true },
                 icon = Icons.Filled.Alarm,
                 description = "Timer",
             )
@@ -158,7 +161,8 @@ fun MainScreenPreview() {
             onRestartConfirmedClick = {}
         ),
         onSettingsClicked = {},
-        onCustomTimeSet = { _, _ -> }
+        onCustomTimeSet = { _, _ -> },
+        onCustomTimeSetClick = {}
     )
 }
 

@@ -16,6 +16,7 @@ interface IMainActivityVM {
     fun onRestartConfirmedClicked()
     fun onPlayPauseBtnClicked()
     fun onCustomTimeSet(customTime: String, bonus: String)
+    fun onCustomTimeSetClick()
 
     data class MainScreenState(
         val timeFormat: String,

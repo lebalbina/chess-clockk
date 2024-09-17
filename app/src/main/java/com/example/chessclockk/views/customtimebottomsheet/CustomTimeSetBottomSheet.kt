@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.chessclockk.R
 
+//TODO obsluga dla blednego inputu "00:00:00"
 @Composable
 fun CustomTimeSetBottomSheetContent(
     onSheetClose: (String, String) -> Unit,
