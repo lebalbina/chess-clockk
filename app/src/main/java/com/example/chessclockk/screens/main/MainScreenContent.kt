@@ -51,6 +51,7 @@ fun MainScreenContent(
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    val settingsVisible by remember { mutableStateOf(false) }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -89,16 +90,18 @@ fun MainScreenContent(
             ClickableIcon(
                 onIconClicked = {
                     onCustomTimeSetClick()
-                    showBottomSheet = true },
+                    showBottomSheet = true
+                },
                 icon = Icons.Filled.Alarm,
                 description = "Timer",
             )
             Restart(restartState = restartState)
-            ClickableIcon(
-                onIconClicked = onSettingsClicked,
-                icon = Icons.Filled.Settings,
-                description = "Settings"
-            )
+            if (settingsVisible)
+                ClickableIcon(
+                    onIconClicked = onSettingsClicked,
+                    icon = Icons.Filled.Settings,
+                    description = "Settings"
+                )
         }
         ClockWidget(
             modifier = Modifier.weight(1f),
