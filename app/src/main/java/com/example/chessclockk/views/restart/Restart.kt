@@ -15,24 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 
-//TODO przeniesc Dialog do MainScreenContent
 @Composable
 fun Restart(
     modifier: Modifier = Modifier,
-    restartState: RestartState
+    restartState: RestartState,
+    showDialog: (Boolean) -> Unit,
 ) {
-    val showDialog = remember { mutableStateOf(false) }
-    if (showDialog.value) {
-        RestartDialog(
-            onRestartConfirmedClick = restartState.onRestartConfirmedClick,
-            showDialog = showDialog
-        )
-    }
-
     Button(
         onClick = {
             restartState.onRestartClicked()
-            showDialog.value = true
+            showDialog(true)
         },
         enabled = restartState.isEnabled
     ) {
@@ -44,36 +36,12 @@ fun Restart(
 }
 
 @Composable
-private fun RestartDialog(
-    onRestartConfirmedClick: () -> Unit,
-    showDialog: MutableState<Boolean>
-) {
-    AlertDialog(
-        onDismissRequest = { showDialog.value = false },
-        dismissButton = {
-            TextButton(onClick = { showDialog.value = false }) {
-                Text("Dismiss")
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onRestartConfirmedClick()
-                showDialog.value = false
-            }) {
-                Text(text = "Confirm")
-            }
-        },
-        title = { Text("Restart") },
-        text = { Text("Do you really want to restart?") }
-    )
-}
-
-@Composable
 @Preview
 fun RestartPreview() {
     Restart(
         modifier = Modifier,
-        RestartState(
+        showDialog = {},
+        restartState = RestartState(
             onRestartConfirmedClick = { },
             icon = Icons.Filled.Refresh,
             onRestartClicked = {},
@@ -82,13 +50,4 @@ fun RestartPreview() {
     )
 }
 
-@Composable
-@Preview
-fun DialogPreview() {
-    val showDialog = remember { mutableStateOf(true) }
-    RestartDialog(
-        onRestartConfirmedClick = {},
-        showDialog = showDialog
-    )
-}
 

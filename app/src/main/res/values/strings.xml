@@ -4,4 +4,8 @@
     <string name="close_time_modal_btn">Done!</string>
     <string name="custom_time_modal_title">Set game time</string>
     <string name="clock_moves">"Moves:"</string>
+    <string name="reset_dialog_dismiss_btn">Dismiss</string>
+    <string name="reset_dialog_confirm_btn">Confirm</string>
+    <string name="reset_dialog_title">Restart clock</string>
+    <string name="reset_dialog_text">Do you really want to restart?</string>
 </resources>

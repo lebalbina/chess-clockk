@@ -9,13 +9,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,7 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.chessclockk.R
 import com.example.chessclockk.views.clock.ClockState
 import com.example.chessclockk.views.clock.ClockWidget
 import com.example.chessclockk.views.customtimebottomsheet.CustomTimeSetBottomSheetContent
@@ -52,6 +58,14 @@ fun MainScreenContent(
     val coroutineScope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     val settingsVisible by remember { mutableStateOf(false) }
+    val showRestartDialog = remember { mutableStateOf(false) }
+
+    if (showRestartDialog.value) {
+        RestartDialog(
+            onRestartConfirmedClick = restartState.onRestartConfirmedClick,
+            showDialog = showRestartDialog
+        )
+    }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -95,7 +109,10 @@ fun MainScreenContent(
                 icon = Icons.Filled.Alarm,
                 description = "Timer",
             )
-            Restart(restartState = restartState)
+            Restart(
+                showDialog = { showRestartDialog.value = it },
+                restartState = restartState
+            )
             if (settingsVisible)
                 ClickableIcon(
                     onIconClicked = onSettingsClicked,
@@ -115,18 +132,45 @@ fun ClickableIcon(
     icon: ImageVector,
     description: String,
     onIconClicked: () -> Unit,
+    isEnabled: Boolean = true
 ) {
     Button(
         onClick = onIconClicked,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFFBE2578)
-        )
+        ),
+        enabled = isEnabled
     ) {
         Icon(
             imageVector = icon,
             contentDescription = description
         )
     }
+}
+
+@Composable
+fun RestartDialog(
+    onRestartConfirmedClick: () -> Unit,
+    showDialog: MutableState<Boolean>
+) {
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        dismissButton = {
+            TextButton(onClick = { showDialog.value = false }) {
+                Text(stringResource(id = R.string.reset_dialog_dismiss_btn))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onRestartConfirmedClick()
+                showDialog.value = false
+            }) {
+                Text(text = stringResource(id = R.string.reset_dialog_confirm_btn))
+            }
+        },
+        title = { Text(stringResource(id = R.string.reset_dialog_title)) },
+        text = { Text(stringResource(id = R.string.reset_dialog_text)) }
+    )
 }
 
 @Preview
@@ -137,20 +181,22 @@ fun MainScreenPreview() {
         clockWhiteState = ClockState(
             timerValue = "3:02",
             timeSetting = "3\"2'",
-            playerLabel = "Player black",
             movesCount = "3",
             rotation = 0f,
             isEnabled = true,
-            onClockClicked = {}
+            onClockClicked = {},
+            backgroundColor = Color.Blue,
+            flagIconVisible = false
         ),
         clockBlackState = ClockState(
             timerValue = "3:02",
             timeSetting = "3\"2'",
-            playerLabel = "Player black",
             movesCount = "3",
             rotation = 180f,
             isEnabled = true,
-            onClockClicked = {}
+            onClockClicked = {},
+            backgroundColor = Color.Blue,
+            flagIconVisible = true
         ),
         playPauseState = PlayPauseState(
             icon = Icons.Filled.Refresh,
@@ -166,6 +212,16 @@ fun MainScreenPreview() {
         onSettingsClicked = {},
         onCustomTimeSet = { _, _ -> },
         onCustomTimeSetClick = {}
+    )
+}
+
+@Composable
+@Preview
+fun DialogPreview() {
+    val showDialog = remember { mutableStateOf(true) }
+    RestartDialog(
+        onRestartConfirmedClick = {},
+        showDialog = showDialog
     )
 }
 

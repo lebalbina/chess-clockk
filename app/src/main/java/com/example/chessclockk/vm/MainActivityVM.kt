@@ -20,6 +20,8 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+//TODO Clock oddzielnym obiektem
+
 @HiltViewModel
 class MainActivityVM @Inject constructor(
     private val tempoUseCase: TempoUseCase
@@ -101,13 +103,13 @@ class MainActivityVM @Inject constructor(
                 }
             }
 
-            GameState.NEW_GAME -> {
+            GameState.NEW_GAME, GameState.END_GAME_WHITE, GameState.END_GAME_BLACK -> {
                 /* do nothing */
             }
         }
     }
 
-    override fun onCustomTimeSetClick(){
+    override fun onCustomTimeSetClick() {
         updateGameState(GameState.PAUSE)
     }
 
@@ -218,16 +220,26 @@ class MainActivityVM @Inject constructor(
         var remainingPlayerMillis = playerMillis
 
         while (remainingPlayerMillis > 0 && gameState.last() == gameStateToCheck) {
+            // TODO jest czas <= 10 sek, wydaj dzwiek
             val currentTime = SystemClock.elapsedRealtime()
             val elapsedTime = currentTime - lastUpdateTime
             remainingPlayerMillis -= elapsedTime
+            lastUpdateTime = currentTime
             updatePlayerMillis(remainingPlayerMillis)
             updateClockValue(remainingPlayerMillis.millisToHHMMSS())
-            lastUpdateTime = currentTime
+
+            if (remainingPlayerMillis < 1000L) {
+                updateGameState(
+                    if (gameStateToCheck == GameState.WHITE_MOVE) GameState.END_GAME_WHITE
+                    else GameState.END_GAME_BLACK
+                )
+                break
+            }
             delay(100)
         }
     }
 }
+
 
 
 
