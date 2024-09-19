@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.convertGameAndBonusTimeToTempo
 import com.example.chessclockk.convertHHMMSSToMillis
 import com.example.chessclockk.millisToHHMMSS
@@ -24,7 +25,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityVM @Inject constructor(
-    private val tempoUseCase: TempoUseCase
+    private val tempoUseCase: TempoUseCase,
+    private val soundManager: SoundManager
 ) : ViewModel(), IMainActivityVM {
 
     private val _clockBlack = MutableLiveData<String>()
@@ -67,6 +69,7 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onClockBlackPressed() {
+        soundManager.playClick()
         updateGameState(GameState.WHITE_MOVE)
         if (gameState.size > 2) {
             incrementMovesCounterAndAddBonusBlack()
@@ -74,6 +77,7 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onClockWhitePressed() {
+        soundManager.playClick()
         updateGameState(GameState.BLACK_MOVE)
         if (gameState.size > 2) {
             incrementMovesCounterAndAddBonusWhite()
@@ -122,6 +126,7 @@ class MainActivityVM @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         clockJob.cancel()
+        soundManager.release()
     }
 
     private fun updateGameState(gameState: GameState) {
@@ -218,9 +223,9 @@ class MainActivityVM @Inject constructor(
         val startTime = SystemClock.elapsedRealtime()
         var lastUpdateTime = startTime
         var remainingPlayerMillis = playerMillis
+        var lastBeepSound = startTime
 
         while (remainingPlayerMillis > 0 && gameState.last() == gameStateToCheck) {
-            // TODO jest czas <= 10 sek, wydaj dzwiek
             val currentTime = SystemClock.elapsedRealtime()
             val elapsedTime = currentTime - lastUpdateTime
             remainingPlayerMillis -= elapsedTime
@@ -235,10 +240,16 @@ class MainActivityVM @Inject constructor(
                 )
                 break
             }
+
+            if (remainingPlayerMillis < 5000L && currentTime - lastBeepSound >= 1000L ) {
+                soundManager.playBeep()
+                lastBeepSound = currentTime
+            }
             delay(100)
         }
     }
 }
+
 
 
 

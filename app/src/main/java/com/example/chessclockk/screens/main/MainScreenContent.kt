@@ -189,7 +189,7 @@ fun MainScreenPreview() {
             flagIconVisible = false
         ),
         clockBlackState = ClockState(
-            timerValue = "3:02",
+            timerValue = "01:01:02",
             timeSetting = "3\"2'",
             movesCount = "3",
             rotation = 180f,

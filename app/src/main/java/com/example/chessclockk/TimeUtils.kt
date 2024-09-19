@@ -22,7 +22,7 @@ fun Long.millisToHHMMSS(): String {
     val seconds = TimeUnit.MILLISECONDS.toSeconds(this) % 60
 
     return if (hours == 0L) {
-        "%02d:%02d".format(minutes, seconds)
+        "%d:%02d".format(minutes, seconds)
     } else {
         "%d:%02d:%02d".format(hours, minutes, seconds)
     }

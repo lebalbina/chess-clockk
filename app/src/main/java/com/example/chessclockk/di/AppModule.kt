@@ -2,6 +2,7 @@ package com.example.chessclockk.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.usecase.TempoUseCase
 import dagger.Module
 import dagger.Provides
@@ -24,5 +25,11 @@ object AppModule {
     @Singleton
     fun provideTempoUseCase(sharedPreferences: SharedPreferences) : TempoUseCase {
         return TempoUseCase(sharedPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSoundManager(@ApplicationContext context: Context): SoundManager {
+        return SoundManager(context)
     }
 }

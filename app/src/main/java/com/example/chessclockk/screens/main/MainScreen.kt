@@ -53,9 +53,9 @@ fun MainScreen(
         derivedStateOf {
             when (state.value.gameState) {
                 GameState.END_GAME_WHITE -> Color.Red
-                GameState.BLACK_MOVE -> Color.Green
-                GameState.END_GAME_BLACK, GameState.WHITE_MOVE,
-                GameState.PAUSE, GameState.NEW_GAME -> Color.Green
+                GameState.BLACK_MOVE -> Color.Gray
+                GameState.PAUSE -> Color.Gray
+                GameState.END_GAME_BLACK, GameState.WHITE_MOVE, GameState.NEW_GAME -> Color.Green
             }
         }
     }
@@ -64,9 +64,9 @@ fun MainScreen(
         derivedStateOf {
             when (state.value.gameState) {
                 GameState.END_GAME_BLACK -> Color.Red
-                GameState.WHITE_MOVE -> Color.Green
-                GameState.END_GAME_WHITE, GameState.BLACK_MOVE,
-                GameState.PAUSE, GameState.NEW_GAME -> Color.Green
+                GameState.WHITE_MOVE -> Color.Gray
+                GameState.PAUSE -> Color.Gray
+                GameState.END_GAME_WHITE, GameState.BLACK_MOVE, GameState.NEW_GAME -> Color.Green
             }
         }
     }
