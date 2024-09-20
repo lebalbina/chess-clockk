@@ -16,9 +16,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,19 +31,20 @@ fun ClockWidget(
         modifier
             .fillMaxSize()
             .background(clockState.backgroundColor)
-//            .alpha(if (clockState.isEnabled) 1f else 0.5f)
             .then(
                 if (clockState.isEnabled) {
                     Modifier.clickable { clockState.onClockClicked.invoke() }
                 } else Modifier
             )
             .rotate(clockState.rotation)
+
     ) {
         Text(
             modifier = Modifier
                 .padding(top = 12.dp, end = 12.dp)
                 .align(Alignment.TopEnd),
             text = "${stringResource(id = R.string.clock_moves)} ${clockState.movesCount}",
+            color = clockState.textColor,
             fontSize = 18.sp
         )
         Text(
@@ -54,6 +52,7 @@ fun ClockWidget(
                 .padding(bottom = 24.dp)
                 .align(Alignment.BottomCenter),
             text = clockState.timeSetting,
+            color = clockState.textColor,
             fontSize = 18.sp
         )
         Row(
@@ -63,13 +62,15 @@ fun ClockWidget(
             Text(
                 text = clockState.timerValue,
                 fontSize = 72.sp,
+                color = clockState.textColor,
                 fontWeight = FontWeight.Bold,
             )
             if (clockState.flagIconVisible) {
                 Icon(
                     painter = painterResource(id = R.drawable.flag_regular),
                     contentDescription = "flag",
-                    Modifier.size(48.dp)
+                    tint = clockState.flagColor,
+                    modifier = Modifier.size(48.dp)
                 )
             }
         }
@@ -84,12 +85,14 @@ fun ClockPreview() {
         clockState = ClockState(
             timerValue = "00:00:00",
             onClockClicked = { },
-            isEnabled = true,
+            isEnabled = false,
             movesCount = "3",
             timeSetting = "3 + 2",
             rotation = 0f,
-            backgroundColor = Color.Red,
-            flagIconVisible = false
+            backgroundColor = Color(0xFF0B6B59),
+            flagIconVisible = false,
+            textColor = Color.White,
+            flagColor = Color.White
         )
     )
 }

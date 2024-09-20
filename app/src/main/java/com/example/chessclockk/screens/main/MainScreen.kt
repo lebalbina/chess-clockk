@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -24,6 +25,8 @@ fun MainScreen(
     viewModel: MainActivityVM,
     modifier: Modifier
 ) {
+
+    val colors = MaterialTheme.colorScheme
 
     val clockBlackValue = viewModel.clockBlackLiveData.observeAsState("111")
     val clockWhiteValue = viewModel.clockWhiteLiveData.observeAsState("111")
@@ -52,10 +55,10 @@ fun MainScreen(
     val clockWhiteColor by remember {
         derivedStateOf {
             when (state.value.gameState) {
-                GameState.END_GAME_WHITE -> Color.Red
-                GameState.BLACK_MOVE -> Color.Gray
-                GameState.PAUSE -> Color.Gray
-                GameState.END_GAME_BLACK, GameState.WHITE_MOVE, GameState.NEW_GAME -> Color.Green
+                GameState.END_GAME_WHITE -> colors.error
+                GameState.BLACK_MOVE -> colors.primary.copy(alpha = 0.5F)
+                GameState.PAUSE -> colors.primary.copy(alpha = 0.5f)
+                GameState.END_GAME_BLACK, GameState.WHITE_MOVE, GameState.NEW_GAME -> colors.primary
             }
         }
     }
@@ -63,10 +66,10 @@ fun MainScreen(
     val clockBlackColor by remember {
         derivedStateOf {
             when (state.value.gameState) {
-                GameState.END_GAME_BLACK -> Color.Red
-                GameState.WHITE_MOVE -> Color.Gray
-                GameState.PAUSE -> Color.Gray
-                GameState.END_GAME_WHITE, GameState.BLACK_MOVE, GameState.NEW_GAME -> Color.Green
+                GameState.END_GAME_BLACK -> colors.error
+                GameState.WHITE_MOVE -> colors.primary.copy(alpha = 0.5F)
+                GameState.PAUSE -> colors.primary.copy(alpha = 0.5f)
+                GameState.END_GAME_WHITE, GameState.BLACK_MOVE, GameState.NEW_GAME -> colors.primary
             }
         }
     }
@@ -109,6 +112,28 @@ fun MainScreen(
         }
     }
 
+    val textColorWhite by remember {
+        derivedStateOf {
+            when (state.value.gameState) {
+                GameState.END_GAME_WHITE -> colors.onError
+                GameState.WHITE_MOVE -> colors.onPrimary
+                GameState.PAUSE, GameState.BLACK_MOVE -> colors.onPrimary.copy(alpha = 0.5F)
+                GameState.END_GAME_BLACK, GameState.NEW_GAME -> colors.onPrimary
+            }
+        }
+    }
+
+    val textColorBlack by remember {
+        derivedStateOf {
+            when (state.value.gameState) {
+                GameState.END_GAME_BLACK -> colors.onError
+                GameState.BLACK_MOVE -> colors.onPrimary
+                GameState.PAUSE, GameState.WHITE_MOVE -> colors.onPrimary.copy(alpha = 0.5F)
+                GameState.END_GAME_WHITE, GameState.NEW_GAME -> colors.onPrimary
+            }
+        }
+    }
+
     MainScreenContent(
         modifier = modifier,
         clockWhiteState = ClockState(
@@ -119,7 +144,9 @@ fun MainScreen(
             movesCount = state.value.whiteMovesCount.toString(),
             timeSetting = state.value.timeFormat,
             backgroundColor = Color(clockWhiteColor.value),
-            flagIconVisible = flagIconWhite
+            flagIconVisible = flagIconWhite,
+            textColor = textColorWhite,
+            flagColor = colors.onError
         ),
         clockBlackState = ClockState(
             timerValue = clockBlackValue.value,
@@ -129,7 +156,9 @@ fun MainScreen(
             timeSetting = state.value.timeFormat,
             rotation = 180f,
             backgroundColor = Color(clockBlackColor.value),
-            flagIconVisible = flagIconBlack
+            flagIconVisible = flagIconBlack,
+            textColor = textColorBlack,
+            flagColor = colors.onError
         ),
         playPauseState = PlayPauseState(
             isEnabled = isPlayPauseBtnEnabled,

@@ -20,7 +20,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -190,7 +189,9 @@ fun MainScreenPreview() {
             isEnabled = true,
             onClockClicked = {},
             backgroundColor = Color.Blue,
-            flagIconVisible = false
+            flagIconVisible = false,
+            textColor = Color.Red,
+            flagColor = Color.White
         ),
         clockBlackState = ClockState(
             timerValue = "01:01:02",
@@ -200,7 +201,9 @@ fun MainScreenPreview() {
             isEnabled = true,
             onClockClicked = {},
             backgroundColor = Color.Blue,
-            flagIconVisible = true
+            flagIconVisible = true,
+            textColor = Color.Blue,
+            flagColor = Color.White
         ),
         playPauseState = PlayPauseState(
             icon = Icons.Filled.Refresh,

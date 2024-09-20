@@ -10,5 +10,7 @@ data class ClockState(
     val movesCount: String,
     val timeSetting: String,
     val backgroundColor: Color,
-    val flagIconVisible: Boolean
+    val flagIconVisible: Boolean,
+    val flagColor: Color,
+    val textColor: Color
 )
