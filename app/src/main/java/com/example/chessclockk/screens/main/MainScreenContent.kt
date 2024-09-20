@@ -20,6 +20,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,12 +59,14 @@ fun MainScreenContent(
     val coroutineScope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     val settingsVisible by remember { mutableStateOf(false) }
-    val showRestartDialog = remember { mutableStateOf(false) }
 
-    if (showRestartDialog.value) {
+    //TODO to wywalic i calosc przez VM ogarniac
+    val localShowRestartDialog = remember { mutableStateOf(false) }
+
+    if (localShowRestartDialog.value) {
         RestartDialog(
             onRestartConfirmedClick = restartState.onRestartConfirmedClick,
-            showDialog = showRestartDialog
+            showDialog = localShowRestartDialog
         )
     }
 
@@ -110,7 +113,7 @@ fun MainScreenContent(
                 description = "Timer",
             )
             Restart(
-                showDialog = { showRestartDialog.value = it },
+                showDialog = { localShowRestartDialog.value = it },
                 restartState = restartState
             )
             if (settingsVisible)
@@ -148,6 +151,7 @@ fun ClickableIcon(
     }
 }
 
+//TODO po co ten stan tutaj?
 @Composable
 fun RestartDialog(
     onRestartConfirmedClick: () -> Unit,
@@ -211,7 +215,7 @@ fun MainScreenPreview() {
         ),
         onSettingsClicked = {},
         onCustomTimeSet = { _, _ -> },
-        onCustomTimeSetClick = {}
+        onCustomTimeSetClick = {},
     )
 }
 

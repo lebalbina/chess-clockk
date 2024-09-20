@@ -31,7 +31,7 @@ class SoundManager @Inject constructor(context: Context) {
     }
 
     fun playBeep() {
-        soundPool.play(clickSoundId, 1f, 1f, 0, 0, 1f)
+        soundPool.play(beepSoundId, 1f, 1f, 0, 0, 1f)
     }
 
     fun release() {

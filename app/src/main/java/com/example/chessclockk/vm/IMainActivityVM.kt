@@ -22,6 +22,6 @@ interface IMainActivityVM {
         val timeFormat: String,
         val gameState: GameState,
         val blackMovesCount: Int,
-        val whiteMovesCount: Int,
+        val whiteMovesCount: Int
     )
 }

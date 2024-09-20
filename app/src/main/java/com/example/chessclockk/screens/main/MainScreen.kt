@@ -144,6 +144,7 @@ fun MainScreen(
         ),
         onSettingsClicked = {},
         onCustomTimeSet = { time, bonus -> viewModel.onCustomTimeSet(time, bonus) },
-        onCustomTimeSetClick = { viewModel.onRestartClicked() }
+        onCustomTimeSetClick = { viewModel.onRestartClicked() },
     )
 }
+

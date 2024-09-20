@@ -118,6 +118,8 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onCustomTimeSet(customTime: String, bonus: String) {
+        //TODO czy reset?
+
         tempoUseCase.saveTempo(customTime, bonus)
         updateTimeFormat()
         initializeGame()
@@ -241,7 +243,7 @@ class MainActivityVM @Inject constructor(
                 break
             }
 
-            if (remainingPlayerMillis < 5000L && currentTime - lastBeepSound >= 1000L ) {
+            if (remainingPlayerMillis < 6000L && currentTime - lastBeepSound >= 1000L ) {
                 soundManager.playBeep()
                 lastBeepSound = currentTime
             }
