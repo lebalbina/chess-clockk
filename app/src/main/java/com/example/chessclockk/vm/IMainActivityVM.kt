@@ -2,18 +2,19 @@ package com.example.chessclockk.vm
 
 import androidx.lifecycle.LiveData
 
-//TODO dodac LiveDate'y i stan
 interface IMainActivityVM {
 
     val clockBlackLiveData: LiveData<String>
     val clockWhiteLiveData: LiveData<String>
 
     val stateLiveData: LiveData<MainScreenState>
+    val showRestartDialog: LiveData<Boolean>
 
     fun onClockBlackPressed()
     fun onClockWhitePressed()
     fun onRestartClicked()
     fun onRestartConfirmedClicked()
+    fun onRestartDismissedClicked()
     fun onPlayPauseBtnClicked()
     fun onCustomTimeSet(customTime: String, bonus: String)
     fun onCustomTimeSetClick()

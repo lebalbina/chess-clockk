@@ -41,6 +41,10 @@ class MainActivityVM @Inject constructor(
     override val stateLiveData: LiveData<MainScreenState>
         get() = _state
 
+    private val _showRestartDialog = MutableLiveData<Boolean>()
+    override val showRestartDialog: LiveData<Boolean>
+        get() = _showRestartDialog
+
     private val clockJob: Job by lazy {
         initializeClockJob()
     }
@@ -85,7 +89,12 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onRestartClicked() {
-        updateGameState(GameState.PAUSE)
+        if (gameState.last() != GameState.PAUSE) updateGameState(GameState.PAUSE)
+        _showRestartDialog.postValue(true)
+    }
+
+    override fun onRestartDismissedClicked() {
+        _showRestartDialog.postValue(false)
     }
 
     override fun onRestartConfirmedClicked() {
@@ -114,12 +123,11 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onCustomTimeSetClick() {
-        updateGameState(GameState.PAUSE)
+        if (gameState.last() != GameState.PAUSE) updateGameState(GameState.PAUSE)
     }
 
+    //TODO jesli toczy sie gra, wyswietlic restart dialog
     override fun onCustomTimeSet(customTime: String, bonus: String) {
-        //TODO czy reset?
-
         tempoUseCase.saveTempo(customTime, bonus)
         updateTimeFormat()
         initializeGame()
@@ -243,7 +251,7 @@ class MainActivityVM @Inject constructor(
                 break
             }
 
-            if (remainingPlayerMillis < 6000L && currentTime - lastBeepSound >= 1000L ) {
+            if (remainingPlayerMillis < 6000L && currentTime - lastBeepSound >= 1000L) {
                 soundManager.playBeep()
                 lastBeepSound = currentTime
             }

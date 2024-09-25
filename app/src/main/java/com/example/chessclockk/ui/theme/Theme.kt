@@ -243,6 +243,9 @@ private val highContrastDarkColorScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
 )
 
+fun getLightColorScheme() = lightScheme
+fun getDarkColorScheme() = darkScheme
+
 @Composable
 fun ChessClockkTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
