@@ -1,7 +1,10 @@
 package com.example.chessclockk.views.clock
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,7 +19,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -29,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.chessclockk.R
 import com.example.chessclockk.ui.theme.getDarkColorScheme
 import com.example.chessclockk.ui.theme.getLightColorScheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun ClockWidget(
@@ -51,6 +60,23 @@ fun ClockWidget(
         label = ""
     )
 
+    var clicked by remember { mutableStateOf(false) }
+    var targetFontSize by remember { mutableFloatStateOf(72f) }
+    val fontSize by animateFloatAsState(
+        targetValue = targetFontSize,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = ""
+    )
+
+    LaunchedEffect(clicked) {
+        if (clicked) {
+            targetFontSize = 82f
+            delay(150)
+            targetFontSize = 72f
+            clicked = false
+        }
+    }
+
     Box(
         modifier
             .fillMaxSize()
@@ -61,7 +87,10 @@ fun ClockWidget(
             .then(
                 if (clockState.isEnabled) {
                     Modifier
-                        .clickable { clockState.onClockClicked.invoke() }
+                        .clickable {
+                            clicked = !clicked
+                            clockState.onClockClicked.invoke()
+                        }
                         .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 } else Modifier
@@ -91,7 +120,7 @@ fun ClockWidget(
         ) {
             Text(
                 text = clockState.timerValue,
-                fontSize = 72.sp,
+                fontSize = fontSize.sp,
                 color = clockState.textColor,
                 fontWeight = FontWeight.Bold,
             )
