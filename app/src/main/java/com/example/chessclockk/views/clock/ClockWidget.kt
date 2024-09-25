@@ -1,5 +1,7 @@
 package com.example.chessclockk.views.clock
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,9 +15,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -34,18 +35,34 @@ fun ClockWidget(
     modifier: Modifier,
     clockState: ClockState
 ) {
+
+    val borderWidth by animateDpAsState(
+        targetValue = if (clockState.isEnabled) 8.dp else 0.dp,
+        label = ""
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (clockState.isEnabled) clockState.frameColor else clockState.backgroundColor,
+        label = ""
+    )
+
+    val boxColor by animateColorAsState(
+        targetValue = clockState.backgroundColor,
+        label = ""
+    )
+
     Box(
         modifier
             .fillMaxSize()
             .background(
-                color = clockState.backgroundColor,
+                color = boxColor,
                 shape = RoundedCornerShape(16.dp)
             )
             .then(
                 if (clockState.isEnabled) {
                     Modifier
                         .clickable { clockState.onClockClicked.invoke() }
-                        .border(8.dp, clockState.frameColor, RoundedCornerShape(16.dp))
+                        .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 } else Modifier
             )

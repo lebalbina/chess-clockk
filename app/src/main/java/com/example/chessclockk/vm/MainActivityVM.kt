@@ -123,7 +123,14 @@ class MainActivityVM @Inject constructor(
     }
 
     override fun onCustomTimeSetClick() {
-        if (gameState.last() != GameState.PAUSE) updateGameState(GameState.PAUSE)
+        when (gameState.last()) {
+            GameState.WHITE_MOVE, GameState.BLACK_MOVE, GameState.NEW_GAME ->
+                updateGameState(GameState.PAUSE)
+
+            else -> {
+                //do nothing
+            }
+        }
     }
 
     //TODO jesli toczy sie gra, wyswietlic restart dialog
