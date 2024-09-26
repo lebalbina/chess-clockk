@@ -37,7 +37,7 @@ fun MainScreen(
         )
     )
 
-    val shorRestartDialog = viewModel.showRestartDialog.observeAsState(false)
+    val showRestartDialog = viewModel.showRestartDialog.observeAsState(false)
 
     val isWhiteEnabled by remember {
         derivedStateOf {
@@ -171,7 +171,7 @@ fun MainScreen(
             onRestartClicked = { viewModel.onRestartClicked() },
             onRestartConfirmedClick = { viewModel.onRestartConfirmedClicked() },
             onRestartDismissedClick = { viewModel.onRestartDismissedClicked() },
-            showRestartDialog = shorRestartDialog.value
+            showRestartDialog = showRestartDialog.value
         ),
         onSettingsClicked = {},
         onCustomTimeSet = { time, bonus -> viewModel.onCustomTimeSet(time, bonus) },

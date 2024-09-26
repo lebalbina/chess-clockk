@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.chessclockk.R
 
-//TODO obsluga dla blednego inputu "00:00:00" - error
 @Composable
 fun CustomTimeSetBottomSheetContent(
     onSheetClose: (String, String) -> Unit,
@@ -106,7 +105,6 @@ fun CustomTimeSetBottomSheetContent(
             Button(
                 modifier = Modifier.padding(bottom = 48.dp),
                 onClick = {
-                    //TODO wyekstrahowac te metode
                     onSheetClose(
                         "${hours.ifEmpty { "00" }}:${minutes.ifEmpty { "00" }}:${seconds.ifEmpty { "00" }}",
                         "${bonusMinutes.ifEmpty { "00" }}:${bonusSeconds.ifEmpty { "00" }}"

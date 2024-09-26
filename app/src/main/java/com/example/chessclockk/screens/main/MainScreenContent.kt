@@ -1,5 +1,6 @@
 package com.example.chessclockk.screens.main
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -64,20 +66,15 @@ fun MainScreenContent(
     var showBottomSheet by remember { mutableStateOf(false) }
     val settingsVisible by remember { mutableStateOf(false) }
 
-    val playPauseIconDescription = remember {
-        when (playPauseState.icon) {
-            Icons.Filled.Pause -> "Pause"
-            Icons.Filled.PlayArrow -> "Play"
-            else -> "Unrecognized"
-        }
-    }
-
     if (restartState.showRestartDialog) {
         RestartDialog(
             onRestartConfirmedClick = restartState.onRestartConfirmedClick,
             onRestartDismissedClick = restartState.onRestartDismissedClick
         )
     }
+
+    val context = LocalContext.current
+    val toastString = stringResource(id = R.string.custom_time_not_allowed)
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -92,9 +89,21 @@ fun MainScreenContent(
                             showBottomSheet = false
                         }
                     }
+                    if (time == "00:00:00") {
+                        Toast.makeText(context, toastString, Toast.LENGTH_LONG).show()
+                        return@CustomTimeSetBottomSheetContent
+                    }
                     onCustomTimeSet(time, bonus)
                 }
             )
+        }
+    }
+
+    val playPauseIconDescription = remember {
+        when (playPauseState.icon) {
+            Icons.Filled.Pause -> "Pause"
+            Icons.Filled.PlayArrow -> "Play"
+            else -> "Unrecognized"
         }
     }
 

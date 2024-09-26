@@ -124,7 +124,7 @@ class MainActivityVM @Inject constructor(
 
     override fun onCustomTimeSetClick() {
         when (gameState.last()) {
-            GameState.WHITE_MOVE, GameState.BLACK_MOVE, GameState.NEW_GAME ->
+            GameState.WHITE_MOVE, GameState.BLACK_MOVE ->
                 updateGameState(GameState.PAUSE)
 
             else -> {
