@@ -3,7 +3,8 @@ package com.example.chessclockk.usecase
 import android.content.SharedPreferences
 import javax.inject.Inject
 
-class TempoUseCase @Inject constructor(
+//TODO interface
+class TempoRepository @Inject constructor(
     private val sharedPreferences: SharedPreferences
 ) {
     fun saveTempo(gameTempo: String, bonusTempo: String) {

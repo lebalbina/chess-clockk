@@ -9,7 +9,7 @@ import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.convertGameAndBonusTimeToTempo
 import com.example.chessclockk.convertHHMMSSToMillis
 import com.example.chessclockk.millisToHHMMSS
-import com.example.chessclockk.usecase.TempoUseCase
+import com.example.chessclockk.usecase.TempoRepository
 import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineStart
@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityVM @Inject constructor(
-    private val tempoUseCase: TempoUseCase,
+    private val tempoRepository: TempoRepository,
     private val soundManager: SoundManager
 ) : ViewModel(), IMainActivityVM {
 
@@ -135,7 +135,7 @@ class MainActivityVM @Inject constructor(
 
     //TODO jesli toczy sie gra, wyswietlic restart dialog
     override fun onCustomTimeSet(customTime: String, bonus: String) {
-        tempoUseCase.saveTempo(customTime, bonus)
+        tempoRepository.saveTempo(customTime, bonus)
         updateTimeFormat()
         initializeGame()
     }
@@ -163,7 +163,7 @@ class MainActivityVM @Inject constructor(
     }
 
     private fun updateTimeFormat() {
-        val tempoAndBonus = tempoUseCase.retrieveTempo()
+        val tempoAndBonus = tempoRepository.retrieveTempo()
         state = state.copy(timeFormat = tempoAndBonus.convertGameAndBonusTimeToTempo())
         _state.postValue(state)
     }
@@ -187,7 +187,7 @@ class MainActivityVM @Inject constructor(
     private fun initializeGame() {
         gameState.clear()
         updateGameState(GameState.NEW_GAME)
-        val gameTempoAndBonus = tempoUseCase.retrieveTempo()
+        val gameTempoAndBonus = tempoRepository.retrieveTempo()
         whiteMillisRemaining = gameTempoAndBonus.first.convertHHMMSSToMillis()
         blackMillisRemaining = gameTempoAndBonus.first.convertHHMMSSToMillis()
         updateClocks()
@@ -203,6 +203,7 @@ class MainActivityVM @Inject constructor(
         ) {
             while (isActive) {
                 runClocks()
+                delay(100)
             }
         }
     }
@@ -227,7 +228,9 @@ class MainActivityVM @Inject constructor(
                 )
             }
 
-            else -> delay(100)
+            else -> {
+//                delay(100)
+            }
         }
     }
 
