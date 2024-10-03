@@ -1,34 +1,22 @@
 package com.example.chessclockk
 
 import android.content.SharedPreferences
-import android.util.EventLogTags
+import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.usecase.TempoRepository
 import com.example.chessclockk.vm.GameState
 import io.mockk.MockKAnnotations
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.invoke
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,20 +24,17 @@ import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
-import org.junit.jupiter.api.extension.TestWatcher
 
 @ExtendWith(CoroutineTestRule::class)
 class ClockkTest {
-
-    private val sharedPreferences = mockk<SharedPreferences>(relaxed = true)
-
-    private val editor = mockk<SharedPreferences.Editor>(relaxed = true)
 
     private val tempoRepository = mockk<TempoRepository>(relaxed = true)
 
     private val timeProvider = mockk<TimeProvider>(relaxed = true)
 
     private val coroutineTestExtension = CoroutineTestRule()
+
+    private val soundManager = mockk<SoundManager>(relaxed = true)
 
     private lateinit var chessClock: NewClock
 
@@ -60,11 +45,28 @@ class ClockkTest {
     @BeforeEach
     fun setup() {
         MockKAnnotations.init(this)
-        every { sharedPreferences.edit() } returns editor
-        every { editor.putString(any(), any()) } returns editor
         every { tempoRepository.retrieveTempo() } returns Pair("00:03:00", "00:02")
+        every { timeProvider.currentTimeMillis() } returnsMany listOf(
+            0L, 1000L,
+            2000L, 3000L,
+            4000L, 5000L,
+            6000L, 7000L,
+            8000L, 9000L,
+            10000, 11000L,
+            12000L, 13000L,
+            14000L, 15000L,
+            16000L, 17000L,
+            18000, 19000L
+        )
 
-        chessClock = NewClock(tempoRepository, timeProvider, coroutineTestExtension.testDispatcher)
+        chessClock = NewClock(
+            tempoRepository,
+            timeProvider,
+            coroutineTestExtension.testDispatcher,
+            soundManager
+        )
+
+        chessClock.updateGameState(GameState.WHITE_MOVE)
     }
 
     @Test
@@ -90,24 +92,20 @@ class ClockkTest {
         // Arrange
         chessClock.setTempo("00:03:00", "00:00")
         val updateWhiteMillis = mockk<(Long) -> Unit>(relaxed = true)
-        chessClock.updateGameState(GameState.WHITE_MOVE)
-        every { timeProvider.currentTimeMillis() } returnsMany listOf(0L, 500L, 1000L, 1500L)
 
         // Act
-        launch {
-            chessClock.startClock(
-                updateBlack = {},
-                onGameEnd = {},
-                updateWhite = updateWhiteMillis
-            )
-        }
+        chessClock.startClock(
+            updateBlack = {},
+            onGameEnd = {},
+            updateWhite = updateWhiteMillis
+        )
         advanceTimeBy(200L)
         chessClock.stopClock()
 
         //Assert
-        coVerify { updateWhiteMillis.invoke(179500) }
         coVerify { updateWhiteMillis.invoke(179000) }
-        assertEquals(179000, chessClock.whiteMillisRemaining)
+        coVerify { updateWhiteMillis.invoke(178000) }
+        assertEquals(178000, chessClock.whiteMillisRemaining)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -116,21 +114,13 @@ class ClockkTest {
         // Arrange
         chessClock.setTempo("00:00:03", "00:00")
         val onGameEnd = mockk<(GameState) -> Unit>(relaxed = true)
-        chessClock.updateGameState(GameState.WHITE_MOVE)
-        every { timeProvider.currentTimeMillis() } returnsMany listOf(
-            0L, 1000L,
-            2000L, 3000L,
-            4000L, 5000L
-        )
 
         // Act
-        launch {
-            chessClock.startClock(
-                updateBlack = {},
-                onGameEnd = onGameEnd,
-                updateWhite = {}
-            )
-        }
+        chessClock.startClock(
+            updateBlack = {},
+            onGameEnd = onGameEnd,
+            updateWhite = {}
+        )
         advanceTimeBy(300L)
         chessClock.stopClock()
 
@@ -140,27 +130,38 @@ class ClockkTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
+    fun testWhitePlayerBonus() = runTest(coroutineTestExtension.testDispatcher) {
+        // Arrange
+        chessClock.setTempo("00:00:05", "00:02")
+        val onGameEnd = mockk<(GameState) -> Unit>(relaxed = true)
+
+        // Act
+        chessClock.startClock(
+            updateBlack = {},
+            onGameEnd = onGameEnd,
+            updateWhite = {}
+        )
+        advanceTimeBy(100L)
+        chessClock.addBonusWhite()
+        chessClock.stopClock()
+
+        //Assert
+        assertEquals(6000L, chessClock.whiteMillisRemaining)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
     fun testSwitchPlayerTimeUpdate() = runTest(coroutineTestExtension.testDispatcher) {
         // Arrange
         chessClock.setTempo("00:03:00", "00:00")
         val updateWhiteMillis = mockk<(Long) -> Unit>(relaxed = true)
-        chessClock.updateGameState(GameState.WHITE_MOVE)
-        every { timeProvider.currentTimeMillis() } returnsMany listOf(
-            0L, 1000L,
-            2000L, 3000L,
-            4000L, 5000L,
-            6000L, 7000L,
-            8000L, 9000L
-        )
 
         // Act
-        launch {
-            chessClock.startClock(
-                updateBlack = {},
-                onGameEnd = {},
-                updateWhite = updateWhiteMillis
-            )
-        }
+        chessClock.startClock(
+            updateBlack = {},
+            onGameEnd = {},
+            updateWhite = updateWhiteMillis
+        )
         advanceTimeBy(200L)
         chessClock.updateGameState(GameState.BLACK_MOVE)
         advanceTimeBy(400L)
@@ -172,8 +173,25 @@ class ClockkTest {
         assertEquals(177000, chessClock.blackMillisRemaining)
     }
 
-    //Test beeps
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testBeep() = runTest(coroutineTestExtension.testDispatcher) {
+        // Arrange
+        chessClock.setTempo("00:00:10", "00:00")
+        val updateWhiteMillis = mockk<(Long) -> Unit>(relaxed = true)
 
+        // Act
+        chessClock.startClock(
+            updateBlack = {},
+            onGameEnd = {},
+            updateWhite = updateWhiteMillis
+        )
+        advanceTimeBy(1000L)
+        chessClock.stopClock()
+
+        //Assert
+        coVerify(exactly = 5) { soundManager.playBeep() }
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

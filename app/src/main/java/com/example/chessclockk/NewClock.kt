@@ -1,5 +1,6 @@
 package com.example.chessclockk
 
+import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.usecase.TempoRepository
 import com.example.chessclockk.vm.GameState
 import kotlinx.coroutines.CoroutineDispatcher
@@ -14,7 +15,8 @@ import javax.inject.Inject
 class NewClock @Inject constructor(
     private val tempoRepository: TempoRepository,
     private val timeProvider: ITimeProvider,
-    private val dispatcher: CoroutineDispatcher
+    private val dispatcher: CoroutineDispatcher,
+    private val soundManager: SoundManager
 ) : IClockk {
     var whiteMillisRemaining: Long = 3000L
         private set
@@ -60,6 +62,14 @@ class NewClock @Inject constructor(
         this.gameState = gameState
     }
 
+    override fun addBonusBlack() {
+        blackMillisRemaining += bonus
+    }
+
+    override fun addBonusWhite() {
+        whiteMillisRemaining += bonus
+    }
+
     override fun stopClock() {
         job.cancel()
     }
@@ -69,14 +79,11 @@ class NewClock @Inject constructor(
         updateBlack: (Long) -> Unit,
         onGameEnd: (GameState) -> Unit
     ) {
-        var counter = 0
         when (gameState) {
             GameState.WHITE_MOVE -> {
                 clockTick(
                     updateUi = { updateWhite(it) },
                     updatePlayerMillis = {
-                        counter += 1
-                        println("updatePlayerMillis white lambda counter = $counter")
                         whiteMillisRemaining = it
                     },
                     gameStateToCheck = GameState.WHITE_MOVE,
@@ -90,7 +97,6 @@ class NewClock @Inject constructor(
                     updateUi = { updateBlack(it) },
                     updatePlayerMillis = {
                         blackMillisRemaining = it
-                        println("updatePlayerMillis black lambda counter = $counter")
                     },
                     gameStateToCheck = GameState.BLACK_MOVE,
                     playerMillis = blackMillisRemaining,
@@ -98,9 +104,7 @@ class NewClock @Inject constructor(
                 )
             }
 
-            else -> {
-
-            }
+            else -> {}
         }
     }
 
@@ -120,7 +124,6 @@ class NewClock @Inject constructor(
             val currentTime = timeProvider.currentTimeMillis()
             val elapsedTime = currentTime - lastUpdateTime
             remainingPlayerMillis -= elapsedTime
-            println("current time = $currentTime, elapsed time = $elapsedTime, remaining millis= $remainingPlayerMillis")
             lastUpdateTime = currentTime
             //extract method
             updatePlayerMillis(remainingPlayerMillis)
@@ -135,7 +138,7 @@ class NewClock @Inject constructor(
             }
 
             if (remainingPlayerMillis < 6000L && currentTime - lastBeepSound >= 1000L) {
-//                soundManager.playBeep()
+                soundManager.playBeep()
                 lastBeepSound = currentTime
             }
             delay(100)
@@ -145,6 +148,4 @@ class NewClock @Inject constructor(
     private fun addBonus(updateMillis: (Long) -> Unit) {
 
     }
-
-
 }

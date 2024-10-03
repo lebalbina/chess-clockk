@@ -10,6 +10,8 @@ interface IClockk {
     )
 
     fun stopClock()
+    fun addBonusBlack()
+    fun addBonusWhite()
     fun updateGameState(gameState: GameState)
     fun setTempo(tempo: String, bonus: String)
 }
