@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chessclockk.IClockk
 import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.convertGameAndBonusTimeToTempo
 import com.example.chessclockk.convertHHMMSSToMillis
@@ -21,12 +22,11 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-//TODO Clock oddzielnym obiektem
-
 @HiltViewModel
 class MainActivityVM @Inject constructor(
     private val tempoRepository: TempoRepository,
-    private val soundManager: SoundManager
+    private val soundManager: SoundManager,
+    private val clockk: IClockk
 ) : ViewModel(), IMainActivityVM {
 
     private val _clockBlack = MutableLiveData<String>()
@@ -53,7 +53,7 @@ class MainActivityVM @Inject constructor(
     private var whiteMillisRemaining = TimeUnit.MINUTES.toMillis(3)
     private var blackMillisRemaining = TimeUnit.MINUTES.toMillis(3)
     private var bonusTime = TimeUnit.SECONDS.toMillis(2)
-    private var defaultFormat = "3\" 2'"
+    private var defaultFormat = "3\" + 2'"
 
     private var state = MainScreenState(
         timeFormat = defaultFormat,
@@ -88,6 +88,7 @@ class MainActivityVM @Inject constructor(
         }
     }
 
+    //TODO te logike trzeba uproscic, zwrocic uwage na RestartDialog
     override fun onRestartClicked() {
         if (gameState.last() != GameState.PAUSE) updateGameState(GameState.PAUSE)
         _showRestartDialog.postValue(true)
@@ -240,35 +241,35 @@ class MainActivityVM @Inject constructor(
         playerMillis: Long,
         gameStateToCheck: GameState
     ) {
-        val startTime = SystemClock.elapsedRealtime()
-        var lastUpdateTime = startTime
-        var remainingPlayerMillis = playerMillis
-        var lastBeepSound = startTime
-
-        while (remainingPlayerMillis > 0 && gameState.last() == gameStateToCheck) {
-            val currentTime = SystemClock.elapsedRealtime()
-            val elapsedTime = currentTime - lastUpdateTime
-            remainingPlayerMillis -= elapsedTime
-            lastUpdateTime = currentTime
-            updatePlayerMillis(remainingPlayerMillis)
-            updateClockValue(remainingPlayerMillis.millisToHHMMSS())
-
-            if (remainingPlayerMillis < 1000L) {
-                updateGameState(
-                    if (gameStateToCheck == GameState.WHITE_MOVE) GameState.END_GAME_WHITE
-                    else GameState.END_GAME_BLACK
-                )
-                break
-            }
-
-            if (remainingPlayerMillis < 6000L && currentTime - lastBeepSound >= 1000L) {
-                soundManager.playBeep()
-                lastBeepSound = currentTime
-            }
-            delay(100)
-        }
+//        val startTime = SystemClock.elapsedRealtime()
+//        var lastUpdateTime = startTime
+//        var remainingPlayerMillis = playerMillis
+//        var lastBeepSound = startTime
+//
+//        while (remainingPlayerMillis > 0 && gameState.last() == gameStateToCheck) {
+//            val currentTime = SystemClock.elapsedRealtime()
+//            val elapsedTime = currentTime - lastUpdateTime
+//            remainingPlayerMillis -= elapsedTime
+//            lastUpdateTime = currentTime
+//            updatePlayerMillis(remainingPlayerMillis)
+//            updateClockValue(remainingPlayerMillis.millisToHHMMSS())
+//
+//            if (remainingPlayerMillis < 1000L) {
+//                updateGameState(
+//                    if (gameStateToCheck == GameState.WHITE_MOVE) GameState.END_GAME_WHITE
+//                    else GameState.END_GAME_BLACK
+//                )
+//                break
+//            }
+//
+//            if (remainingPlayerMillis < 6000L && currentTime - lastBeepSound >= 1000L) {
+//                soundManager.playBeep()
+//                lastBeepSound = currentTime
+//            }
+//            delay(100)
     }
 }
+
 
 
 

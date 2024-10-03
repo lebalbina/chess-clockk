@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 //TODO event-driven game state
-class NewClock @Inject constructor(
+class Clockk @Inject constructor(
     private val tempoRepository: TempoRepository,
     private val timeProvider: ITimeProvider,
     private val dispatcher: CoroutineDispatcher,

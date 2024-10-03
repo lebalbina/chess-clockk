@@ -2,6 +2,8 @@ package com.example.chessclockk.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.chessclockk.Clockk
+import com.example.chessclockk.IClockk
 import com.example.chessclockk.ITimeProvider
 import com.example.chessclockk.TimeProvider
 import com.example.chessclockk.clock.SoundManager
@@ -46,4 +48,16 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    @Singleton
+    fun provideClockk(
+        tempoRepository: TempoRepository,
+        soundManager: SoundManager,
+        dispatcher: CoroutineDispatcher,
+        timeProvider: ITimeProvider
+    ): IClockk {
+        return Clockk(tempoRepository, timeProvider, dispatcher, soundManager)
+    }
 }
+

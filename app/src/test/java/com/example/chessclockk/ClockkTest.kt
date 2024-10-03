@@ -1,6 +1,5 @@
 package com.example.chessclockk
 
-import android.content.SharedPreferences
 import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.usecase.TempoRepository
 import com.example.chessclockk.vm.GameState
@@ -30,13 +29,13 @@ class ClockkTest {
 
     private val tempoRepository = mockk<TempoRepository>(relaxed = true)
 
-    private val timeProvider = mockk<TimeProvider>(relaxed = true)
+    private val timeProvider = mockk<ITimeProvider>(relaxed = true)
 
     private val coroutineTestExtension = CoroutineTestRule()
 
     private val soundManager = mockk<SoundManager>(relaxed = true)
 
-    private lateinit var chessClock: NewClock
+    private lateinit var chessClock: Clockk
 
     //Arrange
     //Act
@@ -59,7 +58,7 @@ class ClockkTest {
             18000, 19000L
         )
 
-        chessClock = NewClock(
+        chessClock = Clockk(
             tempoRepository,
             timeProvider,
             coroutineTestExtension.testDispatcher,
