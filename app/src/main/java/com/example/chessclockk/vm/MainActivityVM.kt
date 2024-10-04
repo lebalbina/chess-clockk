@@ -136,6 +136,7 @@ class MainActivityVM @Inject constructor(
     }
 
     //TODO jesli toczy sie gra, wyswietlic restart dialog
+    //TODO podwojne wywolwanie tempoRepository.retrieve()
     override fun onCustomTimeSet(customTime: String, bonus: String) {
         tempoRepository.saveTempo(customTime, bonus)
         updateTimeFormat()

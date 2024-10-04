@@ -2,28 +2,24 @@ package com.example.chessclockk
 
 import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.arch.core.executor.TaskExecutor
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import com.example.chessclockk.clock.SoundManager
 import com.example.chessclockk.usecase.TempoRepository
 import com.example.chessclockk.vm.GameState
 import com.example.chessclockk.vm.IMainActivityVM
-import com.example.chessclockk.vm.IMainActivityVM.*
+import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
 import com.example.chessclockk.vm.MainActivityVM
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
-import io.mockk.verifySequence
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
-import org.junit.jupiter.api.extension.TestInstancePostProcessor
 
 @ExtendWith(InstantExecutorExtension::class)
 class MainActivityVMTest {
@@ -299,9 +295,57 @@ class MainActivityVMTest {
         verify(exactly = 2) { whiteClockObserver.onChanged(any()) }
     }
 
+    @Test
+    fun customTimeSetClick_gameRunning_shouldPauseGame() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.PAUSE,
+            blackMovesCount = 0,
+            whiteMovesCount = 0
+        )
 
+        //Act
+        viewModel.onClockBlackPressed()
+        viewModel.onCustomTimeSetClick()
+
+        //Assert
+        verify { stateObserver.onChanged(expectedState) }
+    }
+
+    @Test
+    fun customTimeSetClick_newGame_shouldDoNothing() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+
+        //Act
+        viewModel.onCustomTimeSetClick()
+
+        //Assert
+        verify(exactly = 1) { stateObserver.onChanged(any()) }
+    }
+
+    @Test
+    fun customTimeSet_newGame_shouldUpdateTempo() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        viewModel.clockBlackLiveData.observeForever(blackClockObserver)
+        viewModel.clockWhiteLiveData.observeForever(whiteClockObserver)
+
+        val newTime = "00:07"
+        val newBonus = "00:03"
+
+        //Act
+        viewModel.onCustomTimeSet(newTime, newBonus)
+
+        //Assert
+        verify { tempoRepository.saveTempo(newTime, newBonus) }
+        verify { tempoRepository.retrieveTempo() }
+        verify { whiteClockObserver.onChanged(any()) }
+        verify { blackClockObserver.onChanged(any()) }
+    }
 }
-
 
 class InstantExecutorExtension : BeforeEachCallback, AfterEachCallback {
 
@@ -320,3 +364,4 @@ class InstantExecutorExtension : BeforeEachCallback, AfterEachCallback {
         ArchTaskExecutor.getInstance().setDelegate(null)
     }
 }
+
