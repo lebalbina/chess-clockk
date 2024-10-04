@@ -72,6 +72,7 @@ class MainActivityVM @Inject constructor(
         initializeGame()
     }
 
+    //TODO przemyslec - dwa razy stan sie aktualizuje po kazdym ruchu
     override fun onClockBlackPressed() {
         soundManager.playClick()
         updateGameState(GameState.WHITE_MOVE)

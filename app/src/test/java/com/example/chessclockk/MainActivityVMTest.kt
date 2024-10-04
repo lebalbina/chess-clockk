@@ -13,7 +13,10 @@ import com.example.chessclockk.vm.MainActivityVM
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
+import io.mockk.verifySequence
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.AfterEachCallback
@@ -33,6 +36,8 @@ class MainActivityVMTest {
 
     private val stateObserver = mockk<Observer<MainScreenState>>(relaxed = true)
     private val restartDialogObserver = mockk<Observer<Boolean>>(relaxed = true)
+    private val whiteClockObserver = mockk<Observer<String>>(relaxed = true)
+    private val blackClockObserver = mockk<Observer<String>>(relaxed = true)
 
     @BeforeEach
     fun setup() {
@@ -127,7 +132,176 @@ class MainActivityVMTest {
         //Assert
         verify { stateObserver.onChanged(expectedState) }
     }
+
+    @Test
+    fun ppBtnPressed_gamePausedOnBlackTurn_shouldRunBlack() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.BLACK_MOVE,
+            blackMovesCount = 0,
+            whiteMovesCount = 0
+        )
+
+        //Act
+        viewModel.onClockWhitePressed()
+        viewModel.onPlayPauseBtnClicked()
+        viewModel.onPlayPauseBtnClicked()
+
+        //Assert
+        verify { stateObserver.onChanged(expectedState) }
+    }
+
+    @Test
+    fun ppBtnPressed_gamePausedOnWhiteTurn_shouldRunWhite() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.WHITE_MOVE,
+            blackMovesCount = 0,
+            whiteMovesCount = 0
+        )
+
+        //Act
+        viewModel.onClockBlackPressed()
+        viewModel.onPlayPauseBtnClicked()
+        viewModel.onPlayPauseBtnClicked()
+
+        //Assert
+        verify { stateObserver.onChanged(expectedState) }
+    }
+
+    @Test
+    fun ppBtnPressed_newGame_shouldDoNothing() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.NEW_GAME,
+            blackMovesCount = 0,
+            whiteMovesCount = 0
+        )
+
+        //Act
+        viewModel.onPlayPauseBtnClicked()
+
+        //Assert
+        verify(exactly = 1) { stateObserver.onChanged(expectedState) }
+    }
+
+//    @Test
+//    fun ppBtnPressed_endGameWhite_shouldDoNothing() {
+//        //Arrange
+//        viewModel.stateLiveData.observeForever(stateObserver)
+//        val onGameEndSlot = slot<(GameState) -> Unit>()
+//        every { clockk.startClock(any(), any(), capture(onGameEndSlot)) } answers {
+//            onGameEndSlot.captured(GameState.END_GAME_WHITE)
+//        }
+//        val expectedState = MainScreenState(
+//            timeFormat = "3' + 2\"",
+//            gameState = GameState.END_GAME_WHITE,
+//            blackMovesCount = 0,
+//            whiteMovesCount = 0
+//        )
+//
+//        //Act
+//        clockk.startClock(
+//            onGameEnd = onGameEndSlot.captured,
+//            updateWhite = {},
+//            updateBlack = {}
+//        )
+//        viewModel.onPlayPauseBtnClicked()
+//
+//        //Assert
+//        verifySequence {
+//            stateObserver.onChanged(any())
+//            stateObserver.onChanged(expectedState)
+//        }
+//    }
+
+    @Test
+    fun clockBlackPressedInitGame_gameStateShouldUpdate() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        viewModel.clockBlackLiveData.observeForever(blackClockObserver)
+
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.WHITE_MOVE,
+            blackMovesCount = 0,
+            whiteMovesCount = 0
+        )
+
+        //Act
+        viewModel.onClockBlackPressed()
+
+        //Assert
+        verify { soundManager.playClick() }
+        verifyOrder {
+            stateObserver.onChanged(any())
+            stateObserver.onChanged(expectedState)
+        }
+        verify { blackClockObserver.onChanged(any()) }
+    }
+
+    @Test
+    fun clockWhitePressedFirstMove_gameStateShouldUpdate() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        viewModel.clockBlackLiveData.observeForever(blackClockObserver)
+
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.BLACK_MOVE,
+            blackMovesCount = 0,
+            whiteMovesCount = 1
+        )
+
+        //Act
+        viewModel.onClockBlackPressed()
+        viewModel.onClockWhitePressed()
+
+        //Assert
+        verify(exactly = 2) { soundManager.playClick() }
+        verifyOrder {
+            stateObserver.onChanged(any())
+            stateObserver.onChanged(expectedState)
+        }
+        verify { blackClockObserver.onChanged(any()) }
+    }
+
+    @Test
+    fun clockBlackPressedFirstMove_gameStateShouldUpdate() {
+        //Arrange
+        viewModel.stateLiveData.observeForever(stateObserver)
+        viewModel.clockWhiteLiveData.observeForever(whiteClockObserver)
+
+        val expectedState = MainScreenState(
+            timeFormat = "3' + 2\"",
+            gameState = GameState.WHITE_MOVE,
+            blackMovesCount = 1,
+            whiteMovesCount = 1
+        )
+
+        //Act
+        viewModel.onClockBlackPressed()
+        viewModel.onClockWhitePressed()
+        viewModel.onClockBlackPressed()
+
+        //Assert
+        verify(exactly = 3) { soundManager.playClick() }
+        verifyOrder {
+            stateObserver.onChanged(any())
+            stateObserver.onChanged(expectedState)
+        }
+        verify(exactly = 2) { whiteClockObserver.onChanged(any()) }
+    }
+
+
 }
+
 
 class InstantExecutorExtension : BeforeEachCallback, AfterEachCallback {
 
