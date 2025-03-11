@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -114,7 +115,10 @@ fun MainScreenContent(
             .padding(24.dp)
     ) {
         ClockWidget(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag("clockTop"),
+
             clockState = clockBlackState
         )
         Row(
@@ -128,7 +132,8 @@ fun MainScreenContent(
                 icon = playPauseState.icon,
                 onIconClicked = playPauseState.onPlayPauseBtnClicked,
                 description = playPauseIconDescription,
-                isEnabled = playPauseState.isEnabled
+                isEnabled = playPauseState.isEnabled,
+                testTag = "play_pause_button"
             )
             ClickableIcon(
                 onIconClicked = {
@@ -137,18 +142,21 @@ fun MainScreenContent(
                 },
                 icon = Icons.Filled.Alarm,
                 description = "Timer",
+                testTag = "set_time_button"
             )
             ClickableIcon(
                 onIconClicked = restartState.onRestartClicked,
                 icon = Icons.Filled.Refresh,
                 isEnabled = restartState.isEnabled,
-                description = "Restart"
+                description = "Restart",
+                testTag = "restart_button"
             )
             if (settingsVisible)
                 ClickableIcon(
                     onIconClicked = onSettingsClicked,
                     icon = Icons.Filled.Settings,
-                    description = "Settings"
+                    description = "Settings",
+                    testTag = "settings_button"
                 )
         }
         ClockWidget(
@@ -163,10 +171,12 @@ fun ClickableIcon(
     icon: ImageVector,
     description: String,
     onIconClicked: () -> Unit,
-    isEnabled: Boolean = true
+    isEnabled: Boolean = true,
+    testTag: String
 ) {
     val colors = MaterialTheme.colorScheme
     Button(
+        modifier = Modifier.testTag(testTag),
         onClick = onIconClicked,
         enabled = isEnabled,
         colors = ButtonDefaults.buttonColors(

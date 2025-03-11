@@ -17,7 +17,6 @@ import com.example.chessclockk.vm.IMainActivityVM.MainScreenState
 import com.example.chessclockk.vm.MainActivityVM
 
 @Composable
-
 fun MainScreen(
     viewModel: MainActivityVM,
     modifier: Modifier
